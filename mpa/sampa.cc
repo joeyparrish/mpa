@@ -268,20 +268,9 @@ double apparent_moon_longitude(double lamda_prime, double del_psi) {
 }  // namespace
 
 void compute_mpa(const mpa_input& input, mpa_output* output) {
-  // FIXME: share input structure
   spa_data spa;
   memset(&spa, 0, sizeof(spa));
-  spa.year = input.year;
-  spa.month = input.month;
-  spa.day = input.day;
-  spa.hour = input.hour;
-  spa.minute = input.minute;
-  spa.second = input.second;
-  spa.latitude = input.latitude;
-  spa.longitude = input.longitude;
-  spa.elevation = input.elevation;
-
-  spa_calculate(&spa);
+  spa_calculate(input, &spa);
 
   // moon mean longitude [degrees]
   double l_prime = moon_mean_longitude(spa.jc);
@@ -322,31 +311,31 @@ void compute_mpa(const mpa_input& input, mpa_output* output) {
   double delta = geocentric_declination(beta, spa.epsilon, lamda);
 
   // observer hour angle [degrees]
-  double h = observer_hour_angle(spa.nu, spa.longitude, alpha);
+  double h = observer_hour_angle(spa.nu, input.longitude, alpha);
 
   // moon right ascension parallax [degrees]
   double del_alpha;
   // topocentric moon declination [degrees]
   double delta_prime;
   right_ascension_parallax_and_topocentric_dec(
-      spa.latitude, spa.elevation, pi, h, delta,
+      input.latitude, input.elevation, pi, h, delta,
       &del_alpha, &delta_prime);
   // topocentric local hour angle [degrees]
   double h_prime = topocentric_local_hour_angle(h, del_alpha);
 
   // topocentric elevation angle (uncorrected) [degrees]
-  double e0 = topocentric_elevation_angle(spa.latitude, delta_prime,
+  double e0 = topocentric_elevation_angle(input.latitude, delta_prime,
                                         h_prime);
   // atmospheric refraction correction [degrees]
   double del_e = atmospheric_refraction_correction(
-      spa.pressure, spa.temperature, spa.atmos_refract, e0);
+      input.pressure, input.temperature, input.atmos_refract, e0);
   // topocentric elevation angle (corrected) [degrees]
   double e = topocentric_elevation_angle_corrected(e0, del_e);
 
   output->zenith = topocentric_zenith_angle(e);
   // topocentric azimuth angle (westward from south) [for astronomers]
   double azimuth_astro = topocentric_azimuth_angle_astro(
-      h_prime, spa.latitude, delta_prime);
+      h_prime, input.latitude, delta_prime);
   output->azimuth = topocentric_azimuth_angle(azimuth_astro);
 }
 

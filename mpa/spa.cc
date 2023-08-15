@@ -560,12 +560,13 @@ double sun_equatorial_horizontal_parallax(double r) {
   return 8.794 / (3600.0 * r);
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////
-// Calculate required SPA parameters to get the right ascension (alpha) and
-// declination (delta) Note: JD must be already calculated and in structure
-////////////////////////////////////////////////////////////////////////////////////////////////
-void calculate_geocentric_sun_right_ascension_and_declination(spa_data *spa) {
+}  // namespace
+
+void spa_calculate(const mpa_input& input, spa_data *spa) {
   double x[TERM_X_COUNT];
+
+  spa->jd = julian_day(input.year, input.month, input.day, input.hour,
+                       input.minute, input.second);
 
   spa->jc = julian_century(spa->jd);
   spa->jm = julian_millennium(spa->jc);
@@ -596,35 +597,21 @@ void calculate_geocentric_sun_right_ascension_and_declination(spa_data *spa) {
 
   spa->alpha = geocentric_right_ascension(spa->lamda, spa->epsilon, spa->beta);
   spa->delta = geocentric_declination(spa->beta, spa->epsilon, spa->lamda);
-}
 
-}  // namespace
-
-void spa_calculate(spa_data *spa) {
-  spa->jd = julian_day(spa->year, spa->month, spa->day, spa->hour, spa->minute,
-                       spa->second);
-
-  calculate_geocentric_sun_right_ascension_and_declination(spa);
-
-  spa->h = observer_hour_angle(spa->nu, spa->longitude, spa->alpha);
+  spa->h = observer_hour_angle(spa->nu, input.longitude, spa->alpha);
   spa->xi = sun_equatorial_horizontal_parallax(spa->r);
 
   right_ascension_parallax_and_topocentric_dec(
-      spa->latitude, spa->elevation, spa->xi, spa->h, spa->delta,
+      input.latitude, input.elevation, spa->xi, spa->h, spa->delta,
       &(spa->del_alpha), &(spa->delta_prime));
 
   spa->h_prime = topocentric_local_hour_angle(spa->h, spa->del_alpha);
 
-  spa->e0 = topocentric_elevation_angle(spa->latitude, spa->delta_prime,
+  spa->e0 = topocentric_elevation_angle(input.latitude, spa->delta_prime,
                                         spa->h_prime);
   spa->del_e = atmospheric_refraction_correction(
-      spa->pressure, spa->temperature, spa->atmos_refract, spa->e0);
+      input.pressure, input.temperature, input.atmos_refract, spa->e0);
   spa->e = topocentric_elevation_angle_corrected(spa->e0, spa->del_e);
-
-  spa->zenith = topocentric_zenith_angle(spa->e);
-  spa->azimuth_astro = topocentric_azimuth_angle_astro(
-      spa->h_prime, spa->latitude, spa->delta_prime);
-  spa->azimuth = topocentric_azimuth_angle(spa->azimuth_astro);
 }
 
 }  // namespace mpa
