@@ -11,3 +11,12 @@ add_library(sampa
   sampa/bird.cc
   sampa/bird.h
 )
+
+add_library(mpa
+  mpa/spa.cc
+  mpa/spa.h
+  mpa/sampa.cc
+  mpa/sampa.h
+  mpa/bird.cc
+  mpa/bird.h
+)
