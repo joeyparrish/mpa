@@ -22,7 +22,7 @@
 //  This code is based on the NREL           //
 //  technical report "Solar Eclipse          //
 //  Monitoring for Solar Energy Applications //
-//  using the Solar and Moon Position 		 //
+//  using the Solar and Moon Position        //
 //  Algorithms" by Ibrahim Reda              //
 ///////////////////////////////////////////////
 
@@ -337,7 +337,6 @@ void mpa_calculate(spa_data *spa, mpa_data *mpa) {
   right_ascension_parallax_and_topocentric_dec(
       spa->latitude, spa->elevation, mpa->pi, mpa->h, mpa->delta,
       &(mpa->del_alpha), &(mpa->delta_prime));
-  mpa->alpha_prime = topocentric_right_ascension(mpa->alpha, mpa->del_alpha);
   mpa->h_prime = topocentric_local_hour_angle(mpa->h, mpa->del_alpha);
 
   mpa->e0 = topocentric_elevation_angle(spa->latitude, mpa->delta_prime,

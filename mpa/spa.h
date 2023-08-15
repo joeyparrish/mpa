@@ -55,7 +55,6 @@ typedef struct {
                          // error code: 16
 
   //-----------------Intermediate OUTPUT VALUES--------------------
-
   double jd;  // Julian day
   double jc;  // Julian century
   double jm;  // Julian millennium
@@ -66,12 +65,6 @@ typedef struct {
 
   double theta;  // geocentric longitude [degrees]
   double beta;   // geocentric latitude [degrees]
-
-  double x0;  // mean elongation (moon-sun) [degrees]
-  double x1;  // mean anomaly (sun) [degrees]
-  double x2;  // mean anomaly (moon) [degrees]
-  double x3;  // argument latitude (moon) [degrees]
-  double x4;  // ascending longitude (moon) [degrees]
 
   double del_psi;      // nutation longitude [degrees]
   double del_epsilon;  // nutation obliquity [degrees]
@@ -90,36 +83,21 @@ typedef struct {
   double xi;           // sun equatorial horizontal parallax [degrees]
   double del_alpha;    // sun right ascension parallax [degrees]
   double delta_prime;  // topocentric sun declination [degrees]
-  double alpha_prime;  // topocentric sun right ascension [degrees]
   double h_prime;      // topocentric local hour angle [degrees]
 
   double e0;     // topocentric elevation angle (uncorrected) [degrees]
   double del_e;  // atmospheric refraction correction [degrees]
   double e;      // topocentric elevation angle (corrected) [degrees]
-
-  double eot;   // equation of time [minutes]
-  double srha;  // sunrise hour angle [degrees]
-  double ssha;  // sunset hour angle [degrees]
-  double sta;   // sun transit altitude [degrees]
-
-  //---------------------Final OUTPUT VALUES------------------------
-
-  double zenith;         // topocentric zenith angle [degrees]
   double azimuth_astro;  // topocentric azimuth angle (westward from south) [for
                          // astronomers]
+
+  //---------------------Final OUTPUT VALUES------------------------
+  double zenith;         // topocentric zenith angle [degrees]
   double azimuth;        // topocentric azimuth angle (eastward from north) [for
                          // navigators and solar radiation]
-  double incidence;      // surface incidence angle [degrees]
-
-  double suntransit;  // local sun transit time (or solar noon) [fractional
-                      // hour]
-  double sunrise;     // local sunrise time (+/- 30 seconds) [fractional hour]
-  double sunset;      // local sunset time (+/- 30 seconds) [fractional hour]
-
 } spa_data;
 
-//-------------- Utility functions for other applications (such as NREL's SAMPA)
-//--------------
+// Utility functions for other applications (such as NREL's SAMPA)
 double deg2rad(double degrees);
 double rad2deg(double radians);
 double limit_degrees(double degrees);
@@ -132,7 +110,6 @@ void right_ascension_parallax_and_topocentric_dec(double latitude,
                                                   double h, double delta,
                                                   double *delta_alpha,
                                                   double *delta_prime);
-double topocentric_right_ascension(double alpha_deg, double delta_alpha);
 double topocentric_local_hour_angle(double h, double delta_alpha);
 double topocentric_elevation_angle(double latitude, double delta_prime,
                                    double h_prime);

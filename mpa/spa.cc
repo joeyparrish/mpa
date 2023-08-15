@@ -695,10 +695,6 @@ void right_ascension_parallax_and_topocentric_dec(double latitude,
   *delta_alpha = rad2deg(delta_alpha_rad);
 }
 
-double topocentric_right_ascension(double alpha_deg, double delta_alpha) {
-  return alpha_deg + delta_alpha;
-}
-
 double topocentric_local_hour_angle(double h, double delta_alpha) {
   return h - delta_alpha;
 }
@@ -751,11 +747,6 @@ double sun_mean_longitude(double jm) {
              jm * (0.03032028 +
                     jm * (1 / 49931.0 +
                            jm * (-1 / 15300.0 + jm * (-1 / 2000000.0))))));
-}
-
-double eot(double m, double alpha, double del_psi, double epsilon) {
-  return limit_minutes(
-      4.0 * (m - 0.0057183 - alpha + del_psi * cos(deg2rad(epsilon))));
 }
 
 double approx_sun_transit_time(double alpha_zero, double longitude, double nu) {
@@ -828,11 +819,11 @@ void calculate_geocentric_sun_right_ascension_and_declination(spa_data *spa) {
   spa->theta = geocentric_longitude(spa->l);
   spa->beta = geocentric_latitude(spa->b);
 
-  x[TERM_X0] = spa->x0 = mean_elongation_moon_sun(spa->jc);
-  x[TERM_X1] = spa->x1 = mean_anomaly_sun(spa->jc);
-  x[TERM_X2] = spa->x2 = mean_anomaly_moon(spa->jc);
-  x[TERM_X3] = spa->x3 = argument_latitude_moon(spa->jc);
-  x[TERM_X4] = spa->x4 = ascending_longitude_moon(spa->jc);
+  x[TERM_X0] = mean_elongation_moon_sun(spa->jc);
+  x[TERM_X1] = mean_anomaly_sun(spa->jc);
+  x[TERM_X2] = mean_anomaly_moon(spa->jc);
+  x[TERM_X3] = argument_latitude_moon(spa->jc);
+  x[TERM_X4] = ascending_longitude_moon(spa->jc);
 
   nutation_longitude_and_obliquity(spa->jc, x, &(spa->del_psi),
                                    &(spa->del_epsilon));
@@ -872,7 +863,6 @@ int spa_calculate(spa_data *spa) {
         spa->latitude, spa->elevation, spa->xi, spa->h, spa->delta,
         &(spa->del_alpha), &(spa->delta_prime));
 
-    spa->alpha_prime = topocentric_right_ascension(spa->alpha, spa->del_alpha);
     spa->h_prime = topocentric_local_hour_angle(spa->h, spa->del_alpha);
 
     spa->e0 = topocentric_elevation_angle(spa->latitude, spa->delta_prime,
