@@ -20,3 +20,17 @@ add_library(mpa
   mpa/bird.cc
   mpa/bird.h
 )
+
+# Defines the libraries "gtest" and "gtest_main"
+add_subdirectory(googletest)
+
+add_executable(regression_test
+  regression_test.cc
+)
+
+target_link_libraries(regression_test
+  sampa
+  mpa
+  gtest
+  gtest_main
+)
