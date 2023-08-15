@@ -63,12 +63,6 @@
 
 namespace mpa {
 
-// enumeration for function codes to select desired final outputs from SAMPA
-enum {
-  SAMPA_NO_IRR,  // calculate all values except estimated solar irradiances
-  SAMPA_ALL      // calculate all values
-};
-
 typedef struct {
   //-----------------Intermediate MPA OUTPUT VALUES--------------------
 
@@ -115,20 +109,6 @@ typedef struct {
                  // azm_rotation not required)
 
   mpa_data mpa;  // Moon Position Algorithm structure (defined above)
-
-  int function;  // Switch to choose functions for desired output (from
-                 // enumeration)
-
-  //---------INPUT VALUES required for estimated solar irradiances--------
-
-  double
-      bird_ozone;  // total column ozone thickness [cm] -- range from 0.05 - 0.4
-  double bird_pwv;  // total column water vapor [cm] -- range from 0.01 - 6.5
-  double bird_aod;  // broadband aerosol optical depth -- range from 0.02 - 0.5
-  double bird_ba;   // forward scattering factor -- 0.85 recommended for rural
-                    // aerosols
-  double bird_albedo;  // ground reflectance -- earth typical is 0.2, snow 0.9,
-                       // vegitation 0.25
 
   //---------------------Final SAMPA OUTPUT VALUES------------------------
 

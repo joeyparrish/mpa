@@ -91,7 +91,6 @@
 
 #include <math.h>
 
-#include "bird.h"
 #include "spa.h"
 
 #define PI 3.1415926535897932384626433832795028841971
@@ -371,32 +370,6 @@ void mpa_calculate(spa_data *spa, mpa_data *mpa) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
-// Estimate solar irradiances using the SERI/NREL's Bird Clear Sky Model
-///////////////////////////////////////////////////////////////////////////////////////////
-void estimate_irr(sampa_data *sampa) {
-  bird_data bird;
-
-  bird.zenith = sampa->spa.zenith;
-  bird.r = sampa->spa.r;
-  bird.pressure = sampa->spa.pressure;
-  bird.ozone = sampa->bird_ozone;
-  bird.water = sampa->bird_pwv;
-  bird.taua = sampa->bird_aod;
-  bird.ba = sampa->bird_ba;
-  bird.albedo = sampa->bird_albedo;
-  bird.dni_mod = sampa->a_sul_pct / 100.0;
-
-  bird_calculate(&bird);
-
-  sampa->dni = bird.direct_normal;
-  sampa->dni_sul = bird.direct_normal_mod;
-  sampa->ghi = bird.global_horiz;
-  sampa->ghi_sul = bird.global_horiz_mod;
-  sampa->dhi = bird.diffuse_horiz;
-  sampa->dhi_sul = bird.diffuse_horiz_mod;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////
 // Calculate all SAMPA parameters and put into structure
 // Note: All inputs values (listed in SPA header file) must already be in
 // structure
@@ -419,8 +392,6 @@ int sampa_calculate(sampa_data *sampa) {
 
     sul_area(sampa->ems, sampa->rs, sampa->rm, &sampa->a_sul,
              &sampa->a_sul_pct);
-
-    if (sampa->function == SAMPA_ALL) estimate_irr(sampa);
   }
 
   return result;

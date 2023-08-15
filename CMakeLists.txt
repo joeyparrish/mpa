@@ -17,8 +17,6 @@ add_library(mpa
   mpa/spa.h
   mpa/sampa.cc
   mpa/sampa.h
-  mpa/bird.cc
-  mpa/bird.h
 )
 
 # Defines the libraries "gtest" and "gtest_main"
