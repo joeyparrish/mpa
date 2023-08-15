@@ -377,7 +377,6 @@ void mpa_calculate(spa_data *spa, mpa_data *mpa) {
 int sampa_calculate(sampa_data *sampa) {
   int result;
 
-  sampa->spa.function = SPA_ZA;
   result = spa_calculate(&sampa->spa);
 
   if (result == 0) {

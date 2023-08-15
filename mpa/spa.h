@@ -53,14 +53,6 @@
 
 namespace mpa {
 
-// enumeration for function codes to select desired final outputs from SPA
-enum {
-  SPA_ZA,      // calculate zenith and azimuth
-  SPA_ZA_INC,  // calculate zenith, azimuth, and incidence
-  SPA_ZA_RTS,  // calculate zenith, azimuth, and sun rise/transit/set values
-  SPA_ALL,     // calculate all SPA output values
-};
-
 typedef struct {
   //----------------------INPUT VALUES------------------------
 
@@ -105,21 +97,9 @@ typedef struct {
       temperature;  // Annual average local temperature [degrees Celsius]
                     // valid range: -273 to 6000 degrees Celsius, error code; 13
 
-  double slope;  // Surface slope (measured from the horizontal plane)
-                 // valid range: -360 to 360 degrees, error code: 14
-
-  double
-      azm_rotation;  // Surface azimuth rotation (measured from south to
-                     // projection of
-                     //     surface normal on horizontal plane, negative east)
-                     // valid range: -360 to 360 degrees, error code: 15
-
   double atmos_refract;  // Atmospheric refraction at sunrise and sunset (0.5667
                          // deg is typical) valid range: -5   to   5 degrees,
                          // error code: 16
-
-  int function;  // Switch to choose functions for desired output (from
-                 // enumeration)
 
   //-----------------Intermediate OUTPUT VALUES--------------------
 

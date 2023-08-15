@@ -539,11 +539,6 @@ int validate_inputs(spa_data *spa) {
   if (fabs(spa->atmos_refract) > 5) return 16;
   if (spa->elevation < -6500000) return 11;
 
-  if ((spa->function == SPA_ZA_INC) || (spa->function == SPA_ALL)) {
-    if (fabs(spa->slope) > 360) return 14;
-    if (fabs(spa->azm_rotation) > 360) return 15;
-  }
-
   return 0;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -828,16 +823,6 @@ double topocentric_azimuth_angle(double azimuth_astro) {
   return limit_degrees(azimuth_astro + 180.0);
 }
 
-double surface_incidence_angle(double zenith, double azimuth_astro,
-                               double azm_rotation, double slope) {
-  double zenith_rad = deg2rad(zenith);
-  double slope_rad = deg2rad(slope);
-
-  return rad2deg(acos(cos(zenith_rad) * cos(slope_rad) +
-                      sin(slope_rad) * sin(zenith_rad) *
-                          cos(deg2rad(azimuth_astro - azm_rotation))));
-}
-
 double sun_mean_longitude(double jme) {
   return limit_degrees(
       280.4664567 +
@@ -946,84 +931,6 @@ void calculate_geocentric_sun_right_ascension_and_declination(spa_data *spa) {
   spa->delta = geocentric_declination(spa->beta, spa->epsilon, spa->lamda);
 }
 
-////////////////////////////////////////////////////////////////////////
-// Calculate Equation of Time (EOT) and Sun Rise, Transit, & Set (RTS)
-////////////////////////////////////////////////////////////////////////
-
-void calculate_eot_and_sun_rise_transit_set(spa_data *spa) {
-  spa_data sun_rts;
-  double nu, m, h0, n;
-  double alpha[JD_COUNT], delta[JD_COUNT];
-  double m_rts[SUN_COUNT], nu_rts[SUN_COUNT], h_rts[SUN_COUNT];
-  double alpha_prime[SUN_COUNT], delta_prime[SUN_COUNT], h_prime[SUN_COUNT];
-  double h0_prime = -1 * (SUN_RADIUS + spa->atmos_refract);
-  int i;
-
-  sun_rts = *spa;
-  m = sun_mean_longitude(spa->jme);
-  spa->eot = eot(m, spa->alpha, spa->del_psi, spa->epsilon);
-
-  sun_rts.hour = sun_rts.minute = sun_rts.second = 0;
-  sun_rts.delta_ut1 = sun_rts.timezone = 0.0;
-
-  sun_rts.jd = julian_day(sun_rts.year, sun_rts.month, sun_rts.day,
-                          sun_rts.hour, sun_rts.minute, sun_rts.second,
-                          sun_rts.delta_ut1, sun_rts.timezone);
-
-  calculate_geocentric_sun_right_ascension_and_declination(&sun_rts);
-  nu = sun_rts.nu;
-
-  sun_rts.delta_t = 0;
-  sun_rts.jd--;
-  for (i = 0; i < JD_COUNT; i++) {
-    calculate_geocentric_sun_right_ascension_and_declination(&sun_rts);
-    alpha[i] = sun_rts.alpha;
-    delta[i] = sun_rts.delta;
-    sun_rts.jd++;
-  }
-
-  m_rts[SUN_TRANSIT] =
-      approx_sun_transit_time(alpha[JD_ZERO], spa->longitude, nu);
-  h0 = sun_hour_angle_at_rise_set(spa->latitude, delta[JD_ZERO], h0_prime);
-
-  if (h0 >= 0) {
-    approx_sun_rise_and_set(m_rts, h0);
-
-    for (i = 0; i < SUN_COUNT; i++) {
-      nu_rts[i] = nu + 360.985647 * m_rts[i];
-
-      n = m_rts[i] + spa->delta_t / 86400.0;
-      alpha_prime[i] = rts_alpha_delta_prime(alpha, n);
-      delta_prime[i] = rts_alpha_delta_prime(delta, n);
-
-      h_prime[i] =
-          limit_degrees180pm(nu_rts[i] + spa->longitude - alpha_prime[i]);
-
-      h_rts[i] = rts_sun_altitude(spa->latitude, delta_prime[i], h_prime[i]);
-    }
-
-    spa->srha = h_prime[SUN_RISE];
-    spa->ssha = h_prime[SUN_SET];
-    spa->sta = h_rts[SUN_TRANSIT];
-
-    spa->suntransit = dayfrac_to_local_hr(
-        m_rts[SUN_TRANSIT] - h_prime[SUN_TRANSIT] / 360.0, spa->timezone);
-
-    spa->sunrise = dayfrac_to_local_hr(
-        sun_rise_and_set(m_rts, h_rts, delta_prime, spa->latitude, h_prime,
-                         h0_prime, SUN_RISE),
-        spa->timezone);
-
-    spa->sunset = dayfrac_to_local_hr(
-        sun_rise_and_set(m_rts, h_rts, delta_prime, spa->latitude, h_prime,
-                         h0_prime, SUN_SET),
-        spa->timezone);
-
-  } else
-    spa->srha = spa->ssha = spa->sta = spa->suntransit = spa->sunrise =
-        spa->sunset = -99999;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Calculate all SPA parameters and put into structure
 // Note: All inputs values (listed in header file) must already be in structure
@@ -1060,13 +967,6 @@ int spa_calculate(spa_data *spa) {
     spa->azimuth_astro = topocentric_azimuth_angle_astro(
         spa->h_prime, spa->latitude, spa->delta_prime);
     spa->azimuth = topocentric_azimuth_angle(spa->azimuth_astro);
-
-    if ((spa->function == SPA_ZA_INC) || (spa->function == SPA_ALL))
-      spa->incidence = surface_incidence_angle(spa->zenith, spa->azimuth_astro,
-                                               spa->azm_rotation, spa->slope);
-
-    if ((spa->function == SPA_ZA_RTS) || (spa->function == SPA_ALL))
-      calculate_eot_and_sun_rise_transit_set(spa);
   }
 
   return result;
