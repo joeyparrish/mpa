@@ -56,17 +56,17 @@ typedef struct {
   double alpha_prime;  // topocentric moon right ascension [degrees]
   double h_prime;      // topocentric local hour angle [degrees]
 
-  double e0;     // topocentric elevation angle (uncorrected) [degrees]
-  double del_e;  // atmospheric refraction correction [degrees]
-  double e;      // topocentric elevation angle (corrected) [degrees]
+  double e0;             // topocentric elevation angle (uncorrected) [degrees]
+  double del_e;          // atmospheric refraction correction [degrees]
+  double e;              // topocentric elevation angle (corrected) [degrees]
   double azimuth_astro;  // topocentric azimuth angle (westward from south) [for
                          // astronomers]
 
   //---------------------Final MPA OUTPUT VALUES------------------------
-  double zenith;         // topocentric zenith angle [degrees]
-  double azimuth;        // topocentric azimuth angle (eastward from north) [for
-                         // navigators and solar radiation]
-} mpa_data;  // Moon Position Algorithm (MPA) structure
+  double zenith;   // topocentric zenith angle [degrees]
+  double azimuth;  // topocentric azimuth angle (eastward from north) [for
+                   // navigators and solar radiation]
+} mpa_data;        // Moon Position Algorithm (MPA) structure
 
 typedef struct {
   spa_data spa;  // Enter required INPUT VALUES into SPA structure (see SPA.H)
@@ -74,7 +74,7 @@ typedef struct {
                  // azm_rotation not required)
 
   mpa_data mpa;  // Moon Position Algorithm structure (defined above)
-} sampa_data;  // Solar and Moon Position Algorithm (SAMPA) structure
+} sampa_data;    // Solar and Moon Position Algorithm (SAMPA) structure
 
 void sampa_calculate(sampa_data *sampa);
 

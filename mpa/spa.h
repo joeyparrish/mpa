@@ -85,16 +85,16 @@ typedef struct {
   double delta_prime;  // topocentric sun declination [degrees]
   double h_prime;      // topocentric local hour angle [degrees]
 
-  double e0;     // topocentric elevation angle (uncorrected) [degrees]
-  double del_e;  // atmospheric refraction correction [degrees]
-  double e;      // topocentric elevation angle (corrected) [degrees]
+  double e0;             // topocentric elevation angle (uncorrected) [degrees]
+  double del_e;          // atmospheric refraction correction [degrees]
+  double e;              // topocentric elevation angle (corrected) [degrees]
   double azimuth_astro;  // topocentric azimuth angle (westward from south) [for
                          // astronomers]
 
   //---------------------Final OUTPUT VALUES------------------------
-  double zenith;         // topocentric zenith angle [degrees]
-  double azimuth;        // topocentric azimuth angle (eastward from north) [for
-                         // navigators and solar radiation]
+  double zenith;   // topocentric zenith angle [degrees]
+  double azimuth;  // topocentric azimuth angle (eastward from north) [for
+                   // navigators and solar radiation]
 } spa_data;
 
 // Calculate SPA output values (in structure) based on input values passed in

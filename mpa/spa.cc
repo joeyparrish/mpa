@@ -69,9 +69,10 @@
 // manner.
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
+#include "spa.h"
+
 #include <cmath>
 
-#include "spa.h"
 #include "util.h"
 
 #define L_COUNT 6
@@ -385,8 +386,7 @@ double julian_day(int year, int month, int day, int hour, int minute,
                   double second) {
   double day_decimal, julian_day, a;
 
-  day_decimal =
-      day + (hour + (minute + second / 60.0) / 60.0) / 24.0;
+  day_decimal = day + (hour + (minute + second / 60.0) / 60.0) / 24.0;
 
   if (month < 3) {
     month += 12;
@@ -404,9 +404,7 @@ double julian_day(int year, int month, int day, int hour, int minute,
   return julian_day;
 }
 
-double julian_century(double jd) {
-  return (jd - 2451545.0) / 36525.0;
-}
+double julian_century(double jd) { return (jd - 2451545.0) / 36525.0; }
 
 double julian_millennium(double jc) { return (jc / 10.0); }
 
@@ -603,9 +601,8 @@ void calculate_geocentric_sun_right_ascension_and_declination(spa_data *spa) {
 }  // namespace
 
 void spa_calculate(spa_data *spa) {
-  spa->jd =
-      julian_day(spa->year, spa->month, spa->day, spa->hour, spa->minute,
-                 spa->second);
+  spa->jd = julian_day(spa->year, spa->month, spa->day, spa->hour, spa->minute,
+                       spa->second);
 
   calculate_geocentric_sun_right_ascension_and_declination(spa);
 

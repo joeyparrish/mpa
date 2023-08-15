@@ -1,6 +1,6 @@
-#include <cmath>
-
 #include "util.h"
+
+#include <cmath>
 
 #define PI 3.1415926535897932384626433832795028841971
 #define SUN_RADIUS 0.26667
