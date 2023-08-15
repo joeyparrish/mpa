@@ -285,28 +285,35 @@ double greenwich_sidereal_time(double nu0, double delta_psi, double epsilon) {
 }  // namespace
 
 void spa_calculate(const mpa_input& input, spa_data *spa) {
+  // Julian day
+  double jd = julian_day(input.year, input.month, input.day, input.hour,
+                         input.minute, input.second);
+  // Julian century
+  spa->jc = julian_century(jd);
+  // Julian millenium
+  double jm = julian_millennium(spa->jc);
+
   double x[TERM_X_COUNT];
-
-  spa->jd = julian_day(input.year, input.month, input.day, input.hour,
-                       input.minute, input.second);
-
-  spa->jc = julian_century(spa->jd);
-  spa->jm = julian_millennium(spa->jc);
-
   x[TERM_X0] = mean_elongation_moon_sun(spa->jc);
   x[TERM_X1] = mean_anomaly_sun(spa->jc);
   x[TERM_X2] = mean_anomaly_moon(spa->jc);
   x[TERM_X3] = argument_latitude_moon(spa->jc);
   x[TERM_X4] = ascending_longitude_moon(spa->jc);
 
+  // nutation obliquity [degrees]
+  double del_epsilon;
   nutation_longitude_and_obliquity(spa->jc, x, &spa->del_psi,
-                                   &spa->del_epsilon);
+                                   &del_epsilon);
 
-  spa->epsilon0 = ecliptic_mean_obliquity(spa->jm);
-  spa->epsilon = ecliptic_true_obliquity(spa->del_epsilon, spa->epsilon0);
+  // ecliptic mean obliquity [arc seconds]
+  double epsilon0 = ecliptic_mean_obliquity(jm);
+  // // ecliptic true obliquity  [degrees]
+  spa->epsilon = ecliptic_true_obliquity(del_epsilon, epsilon0);
 
-  spa->nu0 = greenwich_mean_sidereal_time(spa->jd, spa->jc);
-  spa->nu = greenwich_sidereal_time(spa->nu0, spa->del_psi, spa->epsilon);
+  // Greenwich mean sidereal time [degrees]
+  double nu0 = greenwich_mean_sidereal_time(jd, spa->jc);
+  // Greenwich sidereal time [degrees]
+  spa->nu = greenwich_sidereal_time(nu0, spa->del_psi, spa->epsilon);
 }
 
 }  // namespace mpa
