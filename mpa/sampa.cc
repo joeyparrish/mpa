@@ -77,8 +77,6 @@
 #include "spa.h"
 #include "util.h"
 
-#define PI 3.1415926535897932384626433832795028841971
-
 #define COUNT 60
 
 namespace mpa {
