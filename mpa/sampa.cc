@@ -314,14 +314,9 @@ void mpa_calculate(spa_data *spa, mpa_data *mpa) {
 
 }  // namespace
 
-int sampa_calculate(sampa_data *sampa) {
-  int result = spa_calculate(&sampa->spa);
-
-  if (result == 0) {
-    mpa_calculate(&sampa->spa, &sampa->mpa);
-  }
-
-  return result;
+void sampa_calculate(sampa_data *sampa) {
+  spa_calculate(&sampa->spa);
+  mpa_calculate(&sampa->spa, &sampa->mpa);
 }
 
 }  // namespace mpa

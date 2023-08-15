@@ -99,6 +99,6 @@ typedef struct {
 
 // Calculate SPA output values (in structure) based on input values passed in
 // structure
-int spa_calculate(spa_data *spa);
+void spa_calculate(spa_data *spa);
 
 }  // namespace mpa

@@ -380,26 +380,6 @@ const double PE_TERMS[Y_COUNT][TERM_PE_COUNT] = {
 
 int integer(double value) { return value; }
 
-int validate_inputs(spa_data *spa) {
-  if ((spa->year < -2000) || (spa->year > 6000)) return 1;
-  if ((spa->month < 1) || (spa->month > 12)) return 2;
-  if ((spa->day < 1) || (spa->day > 31)) return 3;
-  if ((spa->hour < 0) || (spa->hour > 24)) return 4;
-  if ((spa->minute < 0) || (spa->minute > 59)) return 5;
-  if ((spa->second < 0) || (spa->second >= 60)) return 6;
-  if ((spa->pressure < 0) || (spa->pressure > 5000)) return 12;
-  if ((spa->temperature <= -273) || (spa->temperature > 6000)) return 13;
-  if ((spa->hour == 24) && (spa->minute > 0)) return 5;
-  if ((spa->hour == 24) && (spa->second > 0)) return 6;
-
-  if (fabs(spa->longitude) > 180) return 9;
-  if (fabs(spa->latitude) > 90) return 10;
-  if (fabs(spa->atmos_refract) > 5) return 16;
-  if (spa->elevation < -6500000) return 11;
-
-  return 0;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////
 double julian_day(int year, int month, int day, int hour, int minute,
                   double second) {
@@ -622,40 +602,32 @@ void calculate_geocentric_sun_right_ascension_and_declination(spa_data *spa) {
 
 }  // namespace
 
-int spa_calculate(spa_data *spa) {
-  int result;
+void spa_calculate(spa_data *spa) {
+  spa->jd =
+      julian_day(spa->year, spa->month, spa->day, spa->hour, spa->minute,
+                 spa->second);
 
-  result = validate_inputs(spa);
+  calculate_geocentric_sun_right_ascension_and_declination(spa);
 
-  if (result == 0) {
-    spa->jd =
-        julian_day(spa->year, spa->month, spa->day, spa->hour, spa->minute,
-                   spa->second);
+  spa->h = observer_hour_angle(spa->nu, spa->longitude, spa->alpha);
+  spa->xi = sun_equatorial_horizontal_parallax(spa->r);
 
-    calculate_geocentric_sun_right_ascension_and_declination(spa);
+  right_ascension_parallax_and_topocentric_dec(
+      spa->latitude, spa->elevation, spa->xi, spa->h, spa->delta,
+      &(spa->del_alpha), &(spa->delta_prime));
 
-    spa->h = observer_hour_angle(spa->nu, spa->longitude, spa->alpha);
-    spa->xi = sun_equatorial_horizontal_parallax(spa->r);
+  spa->h_prime = topocentric_local_hour_angle(spa->h, spa->del_alpha);
 
-    right_ascension_parallax_and_topocentric_dec(
-        spa->latitude, spa->elevation, spa->xi, spa->h, spa->delta,
-        &(spa->del_alpha), &(spa->delta_prime));
+  spa->e0 = topocentric_elevation_angle(spa->latitude, spa->delta_prime,
+                                        spa->h_prime);
+  spa->del_e = atmospheric_refraction_correction(
+      spa->pressure, spa->temperature, spa->atmos_refract, spa->e0);
+  spa->e = topocentric_elevation_angle_corrected(spa->e0, spa->del_e);
 
-    spa->h_prime = topocentric_local_hour_angle(spa->h, spa->del_alpha);
-
-    spa->e0 = topocentric_elevation_angle(spa->latitude, spa->delta_prime,
-                                          spa->h_prime);
-    spa->del_e = atmospheric_refraction_correction(
-        spa->pressure, spa->temperature, spa->atmos_refract, spa->e0);
-    spa->e = topocentric_elevation_angle_corrected(spa->e0, spa->del_e);
-
-    spa->zenith = topocentric_zenith_angle(spa->e);
-    spa->azimuth_astro = topocentric_azimuth_angle_astro(
-        spa->h_prime, spa->latitude, spa->delta_prime);
-    spa->azimuth = topocentric_azimuth_angle(spa->azimuth_astro);
-  }
-
-  return result;
+  spa->zenith = topocentric_zenith_angle(spa->e);
+  spa->azimuth_astro = topocentric_azimuth_angle_astro(
+      spa->h_prime, spa->latitude, spa->delta_prime);
+  spa->azimuth = topocentric_azimuth_angle(spa->azimuth_astro);
 }
 
 }  // namespace mpa

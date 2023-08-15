@@ -61,9 +61,10 @@ void compare_algorithms(time_t now, double latitude, double longitude, double el
   new_data.spa.longitude = longitude;
   new_data.spa.elevation = elevation;
 
-  // If these fail, the test data was invalid.
+  // If the old one fails, the test data was invalid.
   ASSERT_EQ(0, sampa::sampa_calculate(&old_data));
-  ASSERT_EQ(0, mpa::sampa_calculate(&new_data));
+  // The new one returns void.
+  mpa::sampa_calculate(&new_data);
 
   EXPECT_DOUBLE_EQ(old_data.mpa.azimuth, new_data.mpa.azimuth) << "Azimuth mismatch";
   EXPECT_DOUBLE_EQ(old_data.mpa.zenith, new_data.mpa.zenith) << "Zenith mismatch";

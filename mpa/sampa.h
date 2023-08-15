@@ -76,8 +76,6 @@ typedef struct {
   mpa_data mpa;  // Moon Position Algorithm structure (defined above)
 } sampa_data;  // Solar and Moon Position Algorithm (SAMPA) structure
 
-// Calculate SAMPA output values (in structure) based on input values passed in
-// structure
-int sampa_calculate(sampa_data *sampa);
+void sampa_calculate(sampa_data *sampa);
 
 }  // namespace mpa
