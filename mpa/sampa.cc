@@ -70,9 +70,10 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-#include "sampa.h"
+#include "mpa.h"
 
 #include <cmath>
+#include <cstring>
 
 #include "spa.h"
 #include "util.h"
@@ -84,6 +85,36 @@ namespace mpa {
 namespace {
 
 enum { TERM_D, TERM_M, TERM_MPR, TERM_F, TERM_LB, TERM_R, TERM_COUNT };
+
+struct mpa_intermediate {
+  double l_prime;      // moon mean longitude [degrees]
+  double d;            // moon mean elongation [degrees]
+  double m;            // sun mean anomaly [degrees]
+  double m_prime;      // moon mean anomaly [degrees]
+  double f;            // moon argument of latitude [degrees]
+  double l;            // term l
+  double r;            // term r
+  double b;            // term b
+  double lamda_prime;  // moon longitude [degrees]
+  double beta;         // moon latitude [degrees]
+  double cap_delta;    // distance from earth to moon [kilometers]
+  double pi;           // moon equatorial horizontal parallax [degrees]
+  double lamda;        // apparent moon longitude [degrees]
+
+  double alpha;  // geocentric moon right ascension [degrees]
+  double delta;  // geocentric moon declination [degrees]
+
+  double h;            // observer hour angle [degrees]
+  double del_alpha;    // moon right ascension parallax [degrees]
+  double delta_prime;  // topocentric moon declination [degrees]
+  double h_prime;      // topocentric local hour angle [degrees]
+
+  double e0;             // topocentric elevation angle (uncorrected) [degrees]
+  double del_e;          // atmospheric refraction correction [degrees]
+  double e;              // topocentric elevation angle (corrected) [degrees]
+  double azimuth_astro;  // topocentric azimuth angle (westward from south) [for
+                         // astronomers]
+};
 
 ///////////////////////////////////////////////////////
 ///  Moon's Periodic Terms for Longitude and Distance
@@ -264,58 +295,66 @@ double apparent_moon_longitude(double lamda_prime, double del_psi) {
   return lamda_prime + del_psi;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// Calculate all MPA parameters and put into structure
-// Note: All inputs values (listed in SPA header file) must already be in
-// structure
-///////////////////////////////////////////////////////////////////////////////////////////
-void mpa_calculate(spa_data *spa, mpa_data *mpa) {
-  mpa->l_prime = moon_mean_longitude(spa->jc);
-  mpa->d = moon_mean_elongation(spa->jc);
-  mpa->m = sun_mean_anomaly(spa->jc);
-  mpa->m_prime = moon_mean_anomaly(spa->jc);
-  mpa->f = moon_latitude_argument(spa->jc);
-
-  moon_periodic_term_summation(mpa->d, mpa->m, mpa->m_prime, mpa->f, spa->jc,
-                               ML_TERMS, &mpa->l, &mpa->r);
-  moon_periodic_term_summation(mpa->d, mpa->m, mpa->m_prime, mpa->f, spa->jc,
-                               MB_TERMS, &mpa->b, 0);
-
-  moon_longitude_and_latitude(spa->jc, mpa->l_prime, mpa->f, mpa->m_prime,
-                              mpa->l, mpa->b, &mpa->lamda_prime, &mpa->beta);
-
-  mpa->cap_delta = moon_earth_distance(mpa->r);
-  mpa->pi = moon_equatorial_horiz_parallax(mpa->cap_delta);
-
-  mpa->lamda = apparent_moon_longitude(mpa->lamda_prime, spa->del_psi);
-
-  mpa->alpha = geocentric_right_ascension(mpa->lamda, spa->epsilon, mpa->beta);
-  mpa->delta = geocentric_declination(mpa->beta, spa->epsilon, mpa->lamda);
-
-  mpa->h = observer_hour_angle(spa->nu, spa->longitude, mpa->alpha);
-
-  right_ascension_parallax_and_topocentric_dec(
-      spa->latitude, spa->elevation, mpa->pi, mpa->h, mpa->delta,
-      &(mpa->del_alpha), &(mpa->delta_prime));
-  mpa->h_prime = topocentric_local_hour_angle(mpa->h, mpa->del_alpha);
-
-  mpa->e0 = topocentric_elevation_angle(spa->latitude, mpa->delta_prime,
-                                        mpa->h_prime);
-  mpa->del_e = atmospheric_refraction_correction(
-      spa->pressure, spa->temperature, spa->atmos_refract, mpa->e0);
-  mpa->e = topocentric_elevation_angle_corrected(mpa->e0, mpa->del_e);
-
-  mpa->zenith = topocentric_zenith_angle(mpa->e);
-  mpa->azimuth_astro = topocentric_azimuth_angle_astro(
-      mpa->h_prime, spa->latitude, mpa->delta_prime);
-  mpa->azimuth = topocentric_azimuth_angle(mpa->azimuth_astro);
-}
-
 }  // namespace
 
-void sampa_calculate(sampa_data *sampa) {
-  spa_calculate(&sampa->spa);
-  mpa_calculate(&sampa->spa, &sampa->mpa);
+void compute_mpa(const mpa_input& input, mpa_output* output) {
+  // FIXME: share input structure
+  spa_data spa;
+  memset(&spa, 0, sizeof(spa));
+  spa.year = input.year;
+  spa.month = input.month;
+  spa.day = input.day;
+  spa.hour = input.hour;
+  spa.minute = input.minute;
+  spa.second = input.second;
+  spa.latitude = input.latitude;
+  spa.longitude = input.longitude;
+  spa.elevation = input.elevation;
+
+  spa_calculate(&spa);
+
+  mpa_intermediate mpa;
+  memset(&mpa, 0, sizeof(mpa));
+
+  mpa.l_prime = moon_mean_longitude(spa.jc);
+  mpa.d = moon_mean_elongation(spa.jc);
+  mpa.m = sun_mean_anomaly(spa.jc);
+  mpa.m_prime = moon_mean_anomaly(spa.jc);
+  mpa.f = moon_latitude_argument(spa.jc);
+
+  moon_periodic_term_summation(mpa.d, mpa.m, mpa.m_prime, mpa.f, spa.jc,
+                               ML_TERMS, &mpa.l, &mpa.r);
+  moon_periodic_term_summation(mpa.d, mpa.m, mpa.m_prime, mpa.f, spa.jc,
+                               MB_TERMS, &mpa.b, 0);
+
+  moon_longitude_and_latitude(spa.jc, mpa.l_prime, mpa.f, mpa.m_prime,
+                              mpa.l, mpa.b, &mpa.lamda_prime, &mpa.beta);
+
+  mpa.cap_delta = moon_earth_distance(mpa.r);
+  mpa.pi = moon_equatorial_horiz_parallax(mpa.cap_delta);
+
+  mpa.lamda = apparent_moon_longitude(mpa.lamda_prime, spa.del_psi);
+
+  mpa.alpha = geocentric_right_ascension(mpa.lamda, spa.epsilon, mpa.beta);
+  mpa.delta = geocentric_declination(mpa.beta, spa.epsilon, mpa.lamda);
+
+  mpa.h = observer_hour_angle(spa.nu, spa.longitude, mpa.alpha);
+
+  right_ascension_parallax_and_topocentric_dec(
+      spa.latitude, spa.elevation, mpa.pi, mpa.h, mpa.delta,
+      &(mpa.del_alpha), &(mpa.delta_prime));
+  mpa.h_prime = topocentric_local_hour_angle(mpa.h, mpa.del_alpha);
+
+  mpa.e0 = topocentric_elevation_angle(spa.latitude, mpa.delta_prime,
+                                        mpa.h_prime);
+  mpa.del_e = atmospheric_refraction_correction(
+      spa.pressure, spa.temperature, spa.atmos_refract, mpa.e0);
+  mpa.e = topocentric_elevation_angle_corrected(mpa.e0, mpa.del_e);
+
+  output->zenith = topocentric_zenith_angle(mpa.e);
+  mpa.azimuth_astro = topocentric_azimuth_angle_astro(
+      mpa.h_prime, spa.latitude, mpa.delta_prime);
+  output->azimuth = topocentric_azimuth_angle(mpa.azimuth_astro);
 }
 
 }  // namespace mpa

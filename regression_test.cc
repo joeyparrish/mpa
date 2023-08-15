@@ -6,7 +6,7 @@
 #include "gtest/gtest.h"
 
 #include "sampa/sampa.h"
-#include "mpa/sampa.h"
+#include "mpa/mpa.h"
 
 namespace {
 
@@ -26,10 +26,12 @@ double roll_double(double min, double max) {  // inclusive
 
 void compare_algorithms(time_t now, double latitude, double longitude, double elevation) {
   sampa::sampa_data old_data;
-  mpa::sampa_data new_data;
+  mpa::mpa_input new_input;
+  mpa::mpa_output new_output;
 
   memset(&old_data, 0, sizeof(old_data));
-  memset(&new_data, 0, sizeof(new_data));
+  memset(&new_input, 0, sizeof(new_input));
+  memset(&new_output, 0, sizeof(new_output));
 
   // Break out the unix timestamp into fields.
   struct tm utc;
@@ -49,25 +51,25 @@ void compare_algorithms(time_t now, double latitude, double longitude, double el
   old_data.spa.elevation = elevation;
 
   // Fill in the data to drive the new algorithm.
-  new_data.spa.year = 1900 + utc.tm_year;
-  new_data.spa.month = utc.tm_mon + 1;
-  new_data.spa.day = utc.tm_mday;
+  new_input.year = 1900 + utc.tm_year;
+  new_input.month = utc.tm_mon + 1;
+  new_input.day = utc.tm_mday;
 
-  new_data.spa.hour = utc.tm_hour;
-  new_data.spa.minute = utc.tm_min;
-  new_data.spa.second = utc.tm_sec;
+  new_input.hour = utc.tm_hour;
+  new_input.minute = utc.tm_min;
+  new_input.second = utc.tm_sec;
 
-  new_data.spa.latitude = latitude;
-  new_data.spa.longitude = longitude;
-  new_data.spa.elevation = elevation;
+  new_input.latitude = latitude;
+  new_input.longitude = longitude;
+  new_input.elevation = elevation;
 
   // If the old one fails, the test data was invalid.
   ASSERT_EQ(0, sampa::sampa_calculate(&old_data));
   // The new one returns void.
-  mpa::sampa_calculate(&new_data);
+  mpa::compute_mpa(new_input, &new_output);
 
-  EXPECT_DOUBLE_EQ(old_data.mpa.azimuth, new_data.mpa.azimuth) << "Azimuth mismatch";
-  EXPECT_DOUBLE_EQ(old_data.mpa.zenith, new_data.mpa.zenith) << "Zenith mismatch";
+  EXPECT_DOUBLE_EQ(old_data.mpa.azimuth, new_output.azimuth) << "Azimuth mismatch";
+  EXPECT_DOUBLE_EQ(old_data.mpa.zenith, new_output.zenith) << "Zenith mismatch";
 }
 
 }  // namespace
