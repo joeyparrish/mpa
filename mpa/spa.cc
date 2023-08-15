@@ -1,5 +1,3 @@
-
-
 /////////////////////////////////////////////
 //      Solar Position Algorithm (SPA)     //
 //                   for                   //
@@ -69,74 +67,6 @@
 // application agrees to reference the use of the Software and make this Notice
 // readily accessible to any end-user in a Help|About screen or equivalent
 // manner.
-//
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// Revised 27-FEB-2004 Andreas
-//         Added bounds check on inputs and return value for spa_calculate().
-// Revised 10-MAY-2004 Andreas
-//         Changed temperature bound check minimum from -273.15 to -273 degrees
-//         C.
-// Revised 17-JUN-2004 Andreas
-//         Corrected a problem that caused a bogus sunrise/set/transit on the
-//         equinox.
-// Revised 18-JUN-2004 Andreas
-//         Added a "function" input variable that allows the selecting of
-//         desired outputs.
-// Revised 21-JUN-2004 Andreas
-//         Added 3 new intermediate output values to SPA structure (srha, ssha,
-//         & sta).
-// Revised 23-JUN-2004 Andreas
-//         Enumerations for "function" were renamed and 2 were added.
-//         Prevented bound checks on inputs that are not used (based on
-//         function).
-// Revised 01-SEP-2004 Andreas
-//         Changed a local variable from integer to double.
-// Revised 12-JUL-2005 Andreas
-//         Put a limit on the EOT calculation, so that the result is between -20
-//         and 20.
-// Revised 26-OCT-2005 Andreas
-//         Set the atmos. refraction correction to zero, when sun is below
-//         horizon. Made atmos_refract input a requirement for all "functions".
-//         Changed atmos_refract bound check from +/- 10 to +/- 5 degrees.
-// Revised 07-NOV-2006 Andreas
-//         Corrected 3 earth periodic terms in the L_TERMS array.
-//         Corrected 2 earth periodic terms in the R_TERMS array.
-// Revised 10-NOV-2006 Andreas
-//         Corrected a constant used to calculate topocentric sun declination.
-//         Put a limit on observer hour angle, so result is between 0 and 360.
-// Revised 13-NOV-2006 Andreas
-//         Corrected calculation of topocentric sun declination.
-//         Converted all floating point inputs in spa structure to doubles.
-// Revised 27-FEB-2007 Andreas
-//         Minor correction made as to when atmos. refraction correction is set
-//         to zero.
-// Revised 21-JAN-2008 Andreas
-//         Minor change to two variable declarations.
-// Revised 12-JAN-2009 Andreas
-//         Changed timezone bound check from +/-12 to +/-18 hours.
-// Revised 14-JAN-2009 Andreas
-//         Corrected a constant used to calculate ecliptic mean obliquity.
-// Revised 01-APR-2013 Andreas
-//		   Replace floor with new integer function for tech. report
-// consistency, no affect on results.
-//         Add "utility" function prototypes to header file for use with NREL's
-//         SAMPA. Rename 4 "utility" function names (remove "sun") for clarity
-//         with NREL's SAMPA.
-//		   Added delta_ut1 as required input, which the fractional
-// second difference between UT and UTC.
-//         Time must be input w/o delta_ut1 adjustment, instead of assuming
-//         adjustment was pre-applied.
-// Revised 10-JUL-2014 Andreas
-//         Change second in spa_data structure from an integer to double to
-//         allow fractional second
-// Revised 08-SEP-2014 Andreas
-//         Corrected description of azm_rotation in header file
-//         Limited azimuth180 to range of 0 to 360 deg (instead of -180 to 180)
-//         for tech report consistency Changed all variables names from
-//         azimuth180 to azimuth_astro Renamed 2 "utility" function names for
-//         consistency
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "spa.h"
@@ -509,10 +439,6 @@ double limit_minutes(double minutes) {
   return limited;
 }
 
-double dayfrac_to_local_hr(double dayfrac, double timezone) {
-  return 24.0 * limit_zero2one(dayfrac + timezone / 24.0);
-}
-
 double third_order_polynomial(double a, double b, double c, double d,
                               double x) {
   return ((a * x + b) * x + c) * x + d;
@@ -528,12 +454,9 @@ int validate_inputs(spa_data *spa) {
   if ((spa->second < 0) || (spa->second >= 60)) return 6;
   if ((spa->pressure < 0) || (spa->pressure > 5000)) return 12;
   if ((spa->temperature <= -273) || (spa->temperature > 6000)) return 13;
-  if ((spa->delta_ut1 <= -1) || (spa->delta_ut1 >= 1)) return 17;
   if ((spa->hour == 24) && (spa->minute > 0)) return 5;
   if ((spa->hour == 24) && (spa->second > 0)) return 6;
 
-  if (fabs(spa->delta_t) > 8000) return 7;
-  if (fabs(spa->timezone) > 18) return 8;
   if (fabs(spa->longitude) > 180) return 9;
   if (fabs(spa->latitude) > 90) return 10;
   if (fabs(spa->atmos_refract) > 5) return 16;
@@ -543,11 +466,11 @@ int validate_inputs(spa_data *spa) {
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////
 double julian_day(int year, int month, int day, int hour, int minute,
-                  double second, double dut1, double tz) {
+                  double second) {
   double day_decimal, julian_day, a;
 
   day_decimal =
-      day + (hour - tz + (minute + (second + dut1) / 60.0) / 60.0) / 24.0;
+      day + (hour + (minute + second / 60.0) / 60.0) / 24.0;
 
   if (month < 3) {
     month += 12;
@@ -565,68 +488,66 @@ double julian_day(int year, int month, int day, int hour, int minute,
   return julian_day;
 }
 
-double julian_century(double jd) { return (jd - 2451545.0) / 36525.0; }
-
-double julian_ephemeris_day(double jd, double delta_t) {
-  return jd + delta_t / 86400.0;
+double julian_century(double jd) {
+  return (jd - 2451545.0) / 36525.0;
 }
 
-double julian_ephemeris_century(double jde) {
-  return (jde - 2451545.0) / 36525.0;
+double julian_ephemeris_century(double jd) {
+  return (jd - 2451545.0) / 36525.0;
 }
 
-double julian_ephemeris_millennium(double jce) { return (jce / 10.0); }
+double julian_millennium(double jc) { return (jc / 10.0); }
 
 double earth_periodic_term_summation(const double terms[][TERM_COUNT],
-                                     int count, double jme) {
+                                     int count, double jm) {
   int i;
   double sum = 0;
 
   for (i = 0; i < count; i++)
-    sum += terms[i][TERM_A] * cos(terms[i][TERM_B] + terms[i][TERM_C] * jme);
+    sum += terms[i][TERM_A] * cos(terms[i][TERM_B] + terms[i][TERM_C] * jm);
 
   return sum;
 }
 
-double earth_values(double term_sum[], int count, double jme) {
+double earth_values(double term_sum[], int count, double jm) {
   int i;
   double sum = 0;
 
-  for (i = 0; i < count; i++) sum += term_sum[i] * pow(jme, i);
+  for (i = 0; i < count; i++) sum += term_sum[i] * pow(jm, i);
 
   sum /= 1.0e8;
 
   return sum;
 }
 
-double earth_heliocentric_longitude(double jme) {
+double earth_heliocentric_longitude(double jm) {
   double sum[L_COUNT];
   int i;
 
   for (i = 0; i < L_COUNT; i++)
-    sum[i] = earth_periodic_term_summation(L_TERMS[i], l_subcount[i], jme);
+    sum[i] = earth_periodic_term_summation(L_TERMS[i], l_subcount[i], jm);
 
-  return limit_degrees(rad2deg(earth_values(sum, L_COUNT, jme)));
+  return limit_degrees(rad2deg(earth_values(sum, L_COUNT, jm)));
 }
 
-double earth_heliocentric_latitude(double jme) {
+double earth_heliocentric_latitude(double jm) {
   double sum[B_COUNT];
   int i;
 
   for (i = 0; i < B_COUNT; i++)
-    sum[i] = earth_periodic_term_summation(B_TERMS[i], b_subcount[i], jme);
+    sum[i] = earth_periodic_term_summation(B_TERMS[i], b_subcount[i], jm);
 
-  return rad2deg(earth_values(sum, B_COUNT, jme));
+  return rad2deg(earth_values(sum, B_COUNT, jm));
 }
 
-double earth_radius_vector(double jme) {
+double earth_radius_vector(double jm) {
   double sum[R_COUNT];
   int i;
 
   for (i = 0; i < R_COUNT; i++)
-    sum[i] = earth_periodic_term_summation(R_TERMS[i], r_subcount[i], jme);
+    sum[i] = earth_periodic_term_summation(R_TERMS[i], r_subcount[i], jm);
 
-  return earth_values(sum, R_COUNT, jme);
+  return earth_values(sum, R_COUNT, jm);
 }
 
 double geocentric_longitude(double l) {
@@ -639,29 +560,29 @@ double geocentric_longitude(double l) {
 
 double geocentric_latitude(double b) { return -b; }
 
-double mean_elongation_moon_sun(double jce) {
+double mean_elongation_moon_sun(double jc) {
   return third_order_polynomial(1.0 / 189474.0, -0.0019142, 445267.11148,
-                                297.85036, jce);
+                                297.85036, jc);
 }
 
-double mean_anomaly_sun(double jce) {
+double mean_anomaly_sun(double jc) {
   return third_order_polynomial(-1.0 / 300000.0, -0.0001603, 35999.05034,
-                                357.52772, jce);
+                                357.52772, jc);
 }
 
-double mean_anomaly_moon(double jce) {
+double mean_anomaly_moon(double jc) {
   return third_order_polynomial(1.0 / 56250.0, 0.0086972, 477198.867398,
-                                134.96298, jce);
+                                134.96298, jc);
 }
 
-double argument_latitude_moon(double jce) {
+double argument_latitude_moon(double jc) {
   return third_order_polynomial(1.0 / 327270.0, -0.0036825, 483202.017538,
-                                93.27191, jce);
+                                93.27191, jc);
 }
 
-double ascending_longitude_moon(double jce) {
+double ascending_longitude_moon(double jc) {
   return third_order_polynomial(1.0 / 450000.0, 0.0020708, -1934.136261,
-                                125.04452, jce);
+                                125.04452, jc);
 }
 
 double xy_term_summation(int i, double x[TERM_X_COUNT]) {
@@ -673,16 +594,16 @@ double xy_term_summation(int i, double x[TERM_X_COUNT]) {
   return sum;
 }
 
-void nutation_longitude_and_obliquity(double jce, double x[TERM_X_COUNT],
+void nutation_longitude_and_obliquity(double jc, double x[TERM_X_COUNT],
                                       double *del_psi, double *del_epsilon) {
   int i;
   double xy_term_sum, sum_psi = 0, sum_epsilon = 0;
 
   for (i = 0; i < Y_COUNT; i++) {
     xy_term_sum = deg2rad(xy_term_summation(i, x));
-    sum_psi += (PE_TERMS[i][TERM_PSI_A] + jce * PE_TERMS[i][TERM_PSI_B]) *
+    sum_psi += (PE_TERMS[i][TERM_PSI_A] + jc * PE_TERMS[i][TERM_PSI_B]) *
                sin(xy_term_sum);
-    sum_epsilon += (PE_TERMS[i][TERM_EPS_C] + jce * PE_TERMS[i][TERM_EPS_D]) *
+    sum_epsilon += (PE_TERMS[i][TERM_EPS_C] + jc * PE_TERMS[i][TERM_EPS_D]) *
                    cos(xy_term_sum);
   }
 
@@ -690,8 +611,8 @@ void nutation_longitude_and_obliquity(double jce, double x[TERM_X_COUNT],
   *del_epsilon = sum_epsilon / 36000000.0;
 }
 
-double ecliptic_mean_obliquity(double jme) {
-  double u = jme / 10.0;
+double ecliptic_mean_obliquity(double jm) {
+  double u = jm / 10.0;
 
   return 84381.448 +
          u * (-4680.93 +
@@ -823,13 +744,13 @@ double topocentric_azimuth_angle(double azimuth_astro) {
   return limit_degrees(azimuth_astro + 180.0);
 }
 
-double sun_mean_longitude(double jme) {
+double sun_mean_longitude(double jm) {
   return limit_degrees(
       280.4664567 +
-      jme * (360007.6982779 +
-             jme * (0.03032028 +
-                    jme * (1 / 49931.0 +
-                           jme * (-1 / 15300.0 + jme * (-1 / 2000000.0))))));
+      jm * (360007.6982779 +
+             jm * (0.03032028 +
+                    jm * (1 / 49931.0 +
+                           jm * (-1 / 15300.0 + jm * (-1 / 2000000.0))))));
 }
 
 double eot(double m, double alpha, double del_psi, double epsilon) {
@@ -898,28 +819,25 @@ void calculate_geocentric_sun_right_ascension_and_declination(spa_data *spa) {
   double x[TERM_X_COUNT];
 
   spa->jc = julian_century(spa->jd);
+  spa->jm = julian_millennium(spa->jc);
 
-  spa->jde = julian_ephemeris_day(spa->jd, spa->delta_t);
-  spa->jce = julian_ephemeris_century(spa->jde);
-  spa->jme = julian_ephemeris_millennium(spa->jce);
-
-  spa->l = earth_heliocentric_longitude(spa->jme);
-  spa->b = earth_heliocentric_latitude(spa->jme);
-  spa->r = earth_radius_vector(spa->jme);
+  spa->l = earth_heliocentric_longitude(spa->jm);
+  spa->b = earth_heliocentric_latitude(spa->jm);
+  spa->r = earth_radius_vector(spa->jm);
 
   spa->theta = geocentric_longitude(spa->l);
   spa->beta = geocentric_latitude(spa->b);
 
-  x[TERM_X0] = spa->x0 = mean_elongation_moon_sun(spa->jce);
-  x[TERM_X1] = spa->x1 = mean_anomaly_sun(spa->jce);
-  x[TERM_X2] = spa->x2 = mean_anomaly_moon(spa->jce);
-  x[TERM_X3] = spa->x3 = argument_latitude_moon(spa->jce);
-  x[TERM_X4] = spa->x4 = ascending_longitude_moon(spa->jce);
+  x[TERM_X0] = spa->x0 = mean_elongation_moon_sun(spa->jc);
+  x[TERM_X1] = spa->x1 = mean_anomaly_sun(spa->jc);
+  x[TERM_X2] = spa->x2 = mean_anomaly_moon(spa->jc);
+  x[TERM_X3] = spa->x3 = argument_latitude_moon(spa->jc);
+  x[TERM_X4] = spa->x4 = ascending_longitude_moon(spa->jc);
 
-  nutation_longitude_and_obliquity(spa->jce, x, &(spa->del_psi),
+  nutation_longitude_and_obliquity(spa->jc, x, &(spa->del_psi),
                                    &(spa->del_epsilon));
 
-  spa->epsilon0 = ecliptic_mean_obliquity(spa->jme);
+  spa->epsilon0 = ecliptic_mean_obliquity(spa->jm);
   spa->epsilon = ecliptic_true_obliquity(spa->del_epsilon, spa->epsilon0);
 
   spa->del_tau = aberration_correction(spa->r);
@@ -943,7 +861,7 @@ int spa_calculate(spa_data *spa) {
   if (result == 0) {
     spa->jd =
         julian_day(spa->year, spa->month, spa->day, spa->hour, spa->minute,
-                   spa->second, spa->delta_ut1, spa->timezone);
+                   spa->second);
 
     calculate_geocentric_sun_right_ascension_and_declination(spa);
 

@@ -1,5 +1,3 @@
-
-
 ///////////////////////////////////////////////
 // Solar and Moon Position Algorithm (SAMPA) //
 //                   for                     //
@@ -70,21 +68,6 @@
 // readily accessible to any end-user in a Help|About screen or equivalent
 // manner.
 //
-///////////////////////////////////////////////////////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-// Revised 20-SEPT-2012 Andreas
-//         Modified a_sul and a_sul_pct such that values are reported when no
-//         eclipse is occuring Set a_sul to zero when result was negative due to
-//         moon radius being larger than sun radius Added call to SERI/NREL BIRD
-//         Clear Sky Model to estimate values for irradiances Modified
-//         sampa_data structure to include values for estimated irradiance from
-//         BIRD model Added a "function" input variable that allows the
-//         selecting of desired outputs
-// Revised 08-SEPT-2014 Andreas
-//         Changed all variables names from azimuth180 to azimuth_astro for
-//         consistency with SPA See SPA.H header file for change in results of
-//         azimuth_astro
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
 #include "sampa.h"
@@ -205,42 +188,42 @@ double fourth_order_polynomial(double a, double b, double c, double d, double e,
   return (((a * x + b) * x + c) * x + d) * x + e;
 }
 
-double moon_mean_longitude(double jce) {
+double moon_mean_longitude(double jc) {
   return limit_degrees(fourth_order_polynomial(-1.0 / 65194000, 1.0 / 538841,
                                                -0.0015786, 481267.88123421,
-                                               218.3164477, jce));
+                                               218.3164477, jc));
 }
 
-double moon_mean_elongation(double jce) {
+double moon_mean_elongation(double jc) {
   return limit_degrees(fourth_order_polynomial(-1.0 / 113065000, 1.0 / 545868,
                                                -0.0018819, 445267.1114034,
-                                               297.8501921, jce));
+                                               297.8501921, jc));
 }
 
-double sun_mean_anomaly(double jce) {
+double sun_mean_anomaly(double jc) {
   return limit_degrees(third_order_polynomial(1.0 / 24490000, -0.0001536,
-                                              35999.0502909, 357.5291092, jce));
+                                              35999.0502909, 357.5291092, jc));
 }
 
-double moon_mean_anomaly(double jce) {
+double moon_mean_anomaly(double jc) {
   return limit_degrees(fourth_order_polynomial(-1.0 / 14712000, 1.0 / 69699,
                                                0.0087414, 477198.8675055,
-                                               134.9633964, jce));
+                                               134.9633964, jc));
 }
 
-double moon_latitude_argument(double jce) {
+double moon_latitude_argument(double jc) {
   return limit_degrees(fourth_order_polynomial(1.0 / 863310000, -1.0 / 3526000,
                                                -0.0036539, 483202.0175233,
-                                               93.2720950, jce));
+                                               93.2720950, jc));
 }
 
 void moon_periodic_term_summation(double d, double m, double m_prime, double f,
-                                  double jce,
+                                  double jc,
                                   const double terms[COUNT][TERM_COUNT],
                                   double *sin_sum, double *cos_sum) {
   int i;
   double e_mult, trig_arg;
-  double e = 1.0 - jce * (0.002516 + jce * 0.0000074);
+  double e = 1.0 - jc * (0.002516 + jc * 0.0000074);
 
   *sin_sum = 0;
   if (cos_sum != 0) *cos_sum = 0;
@@ -253,12 +236,12 @@ void moon_periodic_term_summation(double d, double m, double m_prime, double f,
   }
 }
 
-void moon_longitude_and_latitude(double jce, double l_prime, double f,
+void moon_longitude_and_latitude(double jc, double l_prime, double f,
                                  double m_prime, double l, double b,
                                  double *lamda_prime, double *beta) {
-  double a1 = 119.75 + 131.849 * jce;
-  double a2 = 53.09 + 479264.290 * jce;
-  double a3 = 313.45 + 481266.484 * jce;
+  double a1 = 119.75 + 131.849 * jc;
+  double a2 = 53.09 + 479264.290 * jc;
+  double a3 = 313.45 + 481266.484 * jc;
   double delta_l = 3958 * sin(deg2rad(a1)) + 318 * sin(deg2rad(a2)) +
                    1962 * sin(deg2rad(l_prime - f));
   double delta_b = -2235 * sin(deg2rad(l_prime)) + 175 * sin(deg2rad(a1 - f)) +
@@ -327,18 +310,18 @@ void sul_area(double ems, double rs, double rm, double *a_sul,
 // structure
 ///////////////////////////////////////////////////////////////////////////////////////////
 void mpa_calculate(spa_data *spa, mpa_data *mpa) {
-  mpa->l_prime = moon_mean_longitude(spa->jce);
-  mpa->d = moon_mean_elongation(spa->jce);
-  mpa->m = sun_mean_anomaly(spa->jce);
-  mpa->m_prime = moon_mean_anomaly(spa->jce);
-  mpa->f = moon_latitude_argument(spa->jce);
+  mpa->l_prime = moon_mean_longitude(spa->jc);
+  mpa->d = moon_mean_elongation(spa->jc);
+  mpa->m = sun_mean_anomaly(spa->jc);
+  mpa->m_prime = moon_mean_anomaly(spa->jc);
+  mpa->f = moon_latitude_argument(spa->jc);
 
-  moon_periodic_term_summation(mpa->d, mpa->m, mpa->m_prime, mpa->f, spa->jce,
+  moon_periodic_term_summation(mpa->d, mpa->m, mpa->m_prime, mpa->f, spa->jc,
                                ML_TERMS, &mpa->l, &mpa->r);
-  moon_periodic_term_summation(mpa->d, mpa->m, mpa->m_prime, mpa->f, spa->jce,
+  moon_periodic_term_summation(mpa->d, mpa->m, mpa->m_prime, mpa->f, spa->jc,
                                MB_TERMS, &mpa->b, 0);
 
-  moon_longitude_and_latitude(spa->jce, mpa->l_prime, mpa->f, mpa->m_prime,
+  moon_longitude_and_latitude(spa->jc, mpa->l_prime, mpa->f, mpa->m_prime,
                               mpa->l, mpa->b, &mpa->lamda_prime, &mpa->beta);
 
   mpa->cap_delta = moon_earth_distance(mpa->r);

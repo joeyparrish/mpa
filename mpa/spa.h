@@ -1,5 +1,3 @@
-
-
 /////////////////////////////////////////////
 //          HEADER FILE for SPA.C          //
 //                                         //
@@ -20,35 +18,6 @@
 //   1617 Cole Blvd, Golden, CO 80401      //
 /////////////////////////////////////////////
 
-////////////////////////////////////////////////////////////////////////
-//                                                                    //
-// Usage:                                                             //
-//                                                                    //
-//   1) In calling program, include this header file,                 //
-//      by adding this line to the top of file:                       //
-//           #include "spa.h"                                         //
-//                                                                    //
-//   2) In calling program, declare the SPA structure:                //
-//           spa_data spa;                                            //
-//                                                                    //
-//   3) Enter the required input values into SPA structure            //
-//      (input values listed in comments below)                       //
-//                                                                    //
-//   4) Call the SPA calculate function and pass the SPA structure    //
-//      (prototype is declared at the end of this header file):       //
-//           spa_calculate(&spa);                                     //
-//                                                                    //
-//   Selected output values (listed in comments below) will be        //
-//   computed and returned in the passed SPA structure.  Output       //
-//   will based on function code selected from enumeration below.     //
-//                                                                    //
-//   Note: A non-zero return code from spa_calculate() indicates that //
-//         one of the input values did not pass simple bounds tests.  //
-//         The valid input ranges and return error codes are also     //
-//         listed below.                                              //
-//                                                                    //
-////////////////////////////////////////////////////////////////////////
-
 #pragma once
 
 namespace mpa {
@@ -63,22 +32,6 @@ typedef struct {
   int minute;  // Observer local minute, valid range: 0 to  59,  error code: 5
   double
       second;  // Observer local second, valid range: 0 to <60,  error code: 6
-
-  double delta_ut1;  // Fractional second difference between UTC and UT which is
-                     // used to adjust UTC for earth's irregular rotation rate
-                     // and is derived from observation only and is reported in
-                     // this bulletin: http://maia.usno.navy.mil/ser7/ser7.dat,
-                     // where delta_ut1 = DUT1
-                     // valid range: -1 to 1 second (exclusive), error code 17
-
-  double delta_t;  // Difference between earth rotation time and terrestrial
-                   // time It is derived from observation only and is reported
-                   // in this bulletin: http://maia.usno.navy.mil/ser7/ser7.dat,
-                   // where delta_t = 32.184 + (TAI-UTC) - DUT1
-                   // valid range: -8000 to 8000 seconds, error code: 7
-
-  double timezone;  // Observer time zone (negative west of Greenwich)
-                    // valid range: -18   to   18 hours,   error code: 8
 
   double longitude;  // Observer longitude (negative west of Greenwich)
                      // valid range: -180  to  180 degrees, error code: 9
@@ -105,10 +58,7 @@ typedef struct {
 
   double jd;  // Julian day
   double jc;  // Julian century
-
-  double jde;  // Julian ephemeris day
-  double jce;  // Julian ephemeris century
-  double jme;  // Julian ephemeris millennium
+  double jm;  // Julian millennium
 
   double l;  // earth heliocentric longitude [degrees]
   double b;  // earth heliocentric latitude [degrees]

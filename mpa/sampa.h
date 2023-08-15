@@ -1,4 +1,3 @@
-
 ///////////////////////////////////////////////
 //         HEADER FILE for SAMPA.C           //
 //                                           //
@@ -24,38 +23,6 @@
 //  using the Solar and Moon Position 		 //
 //  Algorithms" by Ibrahim Reda              //
 ///////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// Usage:                                                               //
-//                                                                      //
-//   1) Obtain the Solar Position Algorithm from NREL (SPA.C and SPA.H) //
-//           http://www.nrel.gov/midc/spa/                              //
-//                                                                      //
-//   2) In calling program, include this header file,                   //
-//      by adding this line to the top of file:                         //
-//           #include "sampa.h"                                         //
-//                                                                      //
-//   3) In calling program, declare the SAMPA structure:                //
-//           sampa_data sampa;                                          //
-//                                                                      //
-//   4) Enter the required input values into SAMPA.SPA structure        //
-//      (see below, most input values listed in SPA.H comments)         //
-//                                                                      //
-//   5) Call the SAMPA calculate function and pass the SAMPA structure  //
-//      (prototype is declared at the end of this header file):         //
-//           sampa_calculate(&sampa);                                   //
-//                                                                      //
-//   Output values (listed in comments below) will be computed          //
-//   and returned in the passed SAMPA structure.  Output will           //
-//   be based on function code selected from enumeration below.         //
-//                                                                      //
-//   Note: A non-zero return code from sampa_calculate() indicates that //
-//         one of the input values did not pass simple bounds tests.    //
-//         The valid input ranges and return error codes are also       //
-//         listed in SPA.H comments.                                    //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #pragma once
 
