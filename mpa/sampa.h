@@ -59,15 +59,13 @@ typedef struct {
   double e0;     // topocentric elevation angle (uncorrected) [degrees]
   double del_e;  // atmospheric refraction correction [degrees]
   double e;      // topocentric elevation angle (corrected) [degrees]
-
-  //---------------------Final MPA OUTPUT VALUES------------------------
-
-  double zenith;         // topocentric zenith angle [degrees]
   double azimuth_astro;  // topocentric azimuth angle (westward from south) [for
                          // astronomers]
+
+  //---------------------Final MPA OUTPUT VALUES------------------------
+  double zenith;         // topocentric zenith angle [degrees]
   double azimuth;        // topocentric azimuth angle (eastward from north) [for
                          // navigators and solar radiation]
-
 } mpa_data;  // Moon Position Algorithm (MPA) structure
 
 typedef struct {
@@ -76,33 +74,6 @@ typedef struct {
                  // azm_rotation not required)
 
   mpa_data mpa;  // Moon Position Algorithm structure (defined above)
-
-  //---------------------Final SAMPA OUTPUT VALUES------------------------
-
-  double ems;  // local observed, topocentric, angular distance between sun and
-               // moon centers [degrees]
-  double rs;   // radius of sun disk [degrees]
-  double rm;   // radius of moon disk [degrees]
-
-  double a_sul;  // area of sun's unshaded lune (SUL) during eclipse [degrees
-                 // squared]
-  double a_sul_pct;  // percent area of SUL during eclipse [percent]
-
-  double dni;  // estimated direct normal solar irradiance using SERI/NREL Bird
-               // Clear Sky Model [W/m^2]
-  double dni_sul;  // estimated direct normal solar irradiance from the sun's
-                   // unshaded lune [W/m^2]
-
-  double ghi;  // estimated global horizontal solar irradiance using SERI/NREL
-               // Bird Clear Sky Model [W/m^2]
-  double ghi_sul;  // estimated global horizontal solar irradiance from the
-                   // sun's unshaded lune [W/m^2]
-
-  double dhi;  // estimated diffuse horizontal solar irradiance using SERI/NREL
-               // Bird Clear Sky Model [W/m^2]
-  double dhi_sul;  // estimated diffuse horizontal solar irradiance from the
-                   // sun's unshaded lune [W/m^2]
-
 } sampa_data;  // Solar and Moon Position Algorithm (SAMPA) structure
 
 // Calculate SAMPA output values (in structure) based on input values passed in

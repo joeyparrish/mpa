@@ -69,12 +69,10 @@
 // manner.
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
+#include <cmath>
+
 #include "spa.h"
-
-#include <math.h>
-
-#define PI 3.1415926535897932384626433832795028841971
-#define SUN_RADIUS 0.26667
+#include "util.h"
 
 #define L_COUNT 6
 #define B_COUNT 2
@@ -88,6 +86,8 @@
 #define TERM_Y_COUNT TERM_X_COUNT
 
 namespace mpa {
+
+namespace {
 
 enum { TERM_A, TERM_B, TERM_C, TERM_COUNT };
 enum { TERM_X0, TERM_X1, TERM_X2, TERM_X3, TERM_X4, TERM_X_COUNT };
@@ -378,73 +378,8 @@ const double PE_TERMS[Y_COUNT][TERM_PE_COUNT] = {
     {-3, 0, 0, 0},
 };
 
-///////////////////////////////////////////////
-
-double rad2deg(double radians) { return (180.0 / PI) * radians; }
-
-double deg2rad(double degrees) { return (PI / 180.0) * degrees; }
-
 int integer(double value) { return value; }
 
-double limit_degrees(double degrees) {
-  double limited;
-
-  degrees /= 360.0;
-  limited = 360.0 * (degrees - floor(degrees));
-  if (limited < 0) limited += 360.0;
-
-  return limited;
-}
-
-double limit_degrees180pm(double degrees) {
-  double limited;
-
-  degrees /= 360.0;
-  limited = 360.0 * (degrees - floor(degrees));
-  if (limited < -180.0)
-    limited += 360.0;
-  else if (limited > 180.0)
-    limited -= 360.0;
-
-  return limited;
-}
-
-double limit_degrees180(double degrees) {
-  double limited;
-
-  degrees /= 180.0;
-  limited = 180.0 * (degrees - floor(degrees));
-  if (limited < 0) limited += 180.0;
-
-  return limited;
-}
-
-double limit_zero2one(double value) {
-  double limited;
-
-  limited = value - floor(value);
-  if (limited < 0) limited += 1.0;
-
-  return limited;
-}
-
-double limit_minutes(double minutes) {
-  double limited = minutes;
-
-  if (limited < -20.0)
-    limited += 1440.0;
-  else if (limited > 20.0)
-    limited -= 1440.0;
-
-  return limited;
-}
-
-double third_order_polynomial(double a, double b, double c, double d,
-                              double x) {
-  return ((a * x + b) * x + c) * x + d;
-}
-
-///////////////////////////////////////////////////////////////////////////////////////////////
 int validate_inputs(spa_data *spa) {
   if ((spa->year < -2000) || (spa->year > 6000)) return 1;
   if ((spa->month < 1) || (spa->month > 12)) return 2;
@@ -464,6 +399,7 @@ int validate_inputs(spa_data *spa) {
 
   return 0;
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////
 double julian_day(int year, int month, int day, int hour, int minute,
                   double second) {
@@ -489,10 +425,6 @@ double julian_day(int year, int month, int day, int hour, int minute,
 }
 
 double julian_century(double jd) {
-  return (jd - 2451545.0) / 36525.0;
-}
-
-double julian_ephemeris_century(double jd) {
   return (jd - 2451545.0) / 36525.0;
 }
 
@@ -646,160 +578,8 @@ double greenwich_sidereal_time(double nu0, double delta_psi, double epsilon) {
   return nu0 + delta_psi * cos(deg2rad(epsilon));
 }
 
-double geocentric_right_ascension(double lamda, double epsilon, double beta) {
-  double lamda_rad = deg2rad(lamda);
-  double epsilon_rad = deg2rad(epsilon);
-
-  return limit_degrees(rad2deg(atan2(
-      sin(lamda_rad) * cos(epsilon_rad) - tan(deg2rad(beta)) * sin(epsilon_rad),
-      cos(lamda_rad))));
-}
-
-double geocentric_declination(double beta, double epsilon, double lamda) {
-  double beta_rad = deg2rad(beta);
-  double epsilon_rad = deg2rad(epsilon);
-
-  return rad2deg(asin(sin(beta_rad) * cos(epsilon_rad) +
-                      cos(beta_rad) * sin(epsilon_rad) * sin(deg2rad(lamda))));
-}
-
-double observer_hour_angle(double nu, double longitude, double alpha_deg) {
-  return limit_degrees(nu + longitude - alpha_deg);
-}
-
 double sun_equatorial_horizontal_parallax(double r) {
   return 8.794 / (3600.0 * r);
-}
-
-void right_ascension_parallax_and_topocentric_dec(double latitude,
-                                                  double elevation, double xi,
-                                                  double h, double delta,
-                                                  double *delta_alpha,
-                                                  double *delta_prime) {
-  double delta_alpha_rad;
-  double lat_rad = deg2rad(latitude);
-  double xi_rad = deg2rad(xi);
-  double h_rad = deg2rad(h);
-  double delta_rad = deg2rad(delta);
-  double u = atan(0.99664719 * tan(lat_rad));
-  double y = 0.99664719 * sin(u) + elevation * sin(lat_rad) / 6378140.0;
-  double x = cos(u) + elevation * cos(lat_rad) / 6378140.0;
-
-  delta_alpha_rad = atan2(-x * sin(xi_rad) * sin(h_rad),
-                          cos(delta_rad) - x * sin(xi_rad) * cos(h_rad));
-
-  *delta_prime =
-      rad2deg(atan2((sin(delta_rad) - y * sin(xi_rad)) * cos(delta_alpha_rad),
-                    cos(delta_rad) - x * sin(xi_rad) * cos(h_rad)));
-
-  *delta_alpha = rad2deg(delta_alpha_rad);
-}
-
-double topocentric_local_hour_angle(double h, double delta_alpha) {
-  return h - delta_alpha;
-}
-
-double topocentric_elevation_angle(double latitude, double delta_prime,
-                                   double h_prime) {
-  double lat_rad = deg2rad(latitude);
-  double delta_prime_rad = deg2rad(delta_prime);
-
-  return rad2deg(
-      asin(sin(lat_rad) * sin(delta_prime_rad) +
-           cos(lat_rad) * cos(delta_prime_rad) * cos(deg2rad(h_prime))));
-}
-
-double atmospheric_refraction_correction(double pressure, double temperature,
-                                         double atmos_refract, double e0) {
-  double del_e = 0;
-
-  if (e0 >= -1 * (SUN_RADIUS + atmos_refract))
-    del_e = (pressure / 1010.0) * (283.0 / (273.0 + temperature)) * 1.02 /
-            (60.0 * tan(deg2rad(e0 + 10.3 / (e0 + 5.11))));
-
-  return del_e;
-}
-
-double topocentric_elevation_angle_corrected(double e0, double delta_e) {
-  return e0 + delta_e;
-}
-
-double topocentric_zenith_angle(double e) { return 90.0 - e; }
-
-double topocentric_azimuth_angle_astro(double h_prime, double latitude,
-                                       double delta_prime) {
-  double h_prime_rad = deg2rad(h_prime);
-  double lat_rad = deg2rad(latitude);
-
-  return limit_degrees(rad2deg(
-      atan2(sin(h_prime_rad), cos(h_prime_rad) * sin(lat_rad) -
-                                  tan(deg2rad(delta_prime)) * cos(lat_rad))));
-}
-
-double topocentric_azimuth_angle(double azimuth_astro) {
-  return limit_degrees(azimuth_astro + 180.0);
-}
-
-double sun_mean_longitude(double jm) {
-  return limit_degrees(
-      280.4664567 +
-      jm * (360007.6982779 +
-             jm * (0.03032028 +
-                    jm * (1 / 49931.0 +
-                           jm * (-1 / 15300.0 + jm * (-1 / 2000000.0))))));
-}
-
-double approx_sun_transit_time(double alpha_zero, double longitude, double nu) {
-  return (alpha_zero - longitude - nu) / 360.0;
-}
-
-double sun_hour_angle_at_rise_set(double latitude, double delta_zero,
-                                  double h0_prime) {
-  double h0 = -99999;
-  double latitude_rad = deg2rad(latitude);
-  double delta_zero_rad = deg2rad(delta_zero);
-  double argument =
-      (sin(deg2rad(h0_prime)) - sin(latitude_rad) * sin(delta_zero_rad)) /
-      (cos(latitude_rad) * cos(delta_zero_rad));
-
-  if (fabs(argument) <= 1) h0 = limit_degrees180(rad2deg(acos(argument)));
-
-  return h0;
-}
-
-void approx_sun_rise_and_set(double *m_rts, double h0) {
-  double h0_dfrac = h0 / 360.0;
-
-  m_rts[SUN_RISE] = limit_zero2one(m_rts[SUN_TRANSIT] - h0_dfrac);
-  m_rts[SUN_SET] = limit_zero2one(m_rts[SUN_TRANSIT] + h0_dfrac);
-  m_rts[SUN_TRANSIT] = limit_zero2one(m_rts[SUN_TRANSIT]);
-}
-
-double rts_alpha_delta_prime(double *ad, double n) {
-  double a = ad[JD_ZERO] - ad[JD_MINUS];
-  double b = ad[JD_PLUS] - ad[JD_ZERO];
-
-  if (fabs(a) >= 2.0) a = limit_zero2one(a);
-  if (fabs(b) >= 2.0) b = limit_zero2one(b);
-
-  return ad[JD_ZERO] + n * (a + b + (b - a) * n) / 2.0;
-}
-
-double rts_sun_altitude(double latitude, double delta_prime, double h_prime) {
-  double latitude_rad = deg2rad(latitude);
-  double delta_prime_rad = deg2rad(delta_prime);
-
-  return rad2deg(
-      asin(sin(latitude_rad) * sin(delta_prime_rad) +
-           cos(latitude_rad) * cos(delta_prime_rad) * cos(deg2rad(h_prime))));
-}
-
-double sun_rise_and_set(double *m_rts, double *h_rts, double *delta_prime,
-                        double latitude, double *h_prime, double h0_prime,
-                        int sun) {
-  return m_rts[sun] + (h_rts[sun] - h0_prime) /
-                          (360.0 * cos(deg2rad(delta_prime[sun])) *
-                           cos(deg2rad(latitude)) * sin(deg2rad(h_prime[sun])));
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -840,10 +620,8 @@ void calculate_geocentric_sun_right_ascension_and_declination(spa_data *spa) {
   spa->delta = geocentric_declination(spa->beta, spa->epsilon, spa->lamda);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// Calculate all SPA parameters and put into structure
-// Note: All inputs values (listed in header file) must already be in structure
-///////////////////////////////////////////////////////////////////////////////////////////
+}  // namespace
+
 int spa_calculate(spa_data *spa) {
   int result;
 
@@ -879,6 +657,5 @@ int spa_calculate(spa_data *spa) {
 
   return result;
 }
-///////////////////////////////////////////////////////////////////////////////////////////
 
 }  // namespace mpa

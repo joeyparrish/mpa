@@ -70,17 +70,19 @@
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
+#include <cmath>
+
 #include "sampa.h"
-
-#include <math.h>
-
 #include "spa.h"
+#include "util.h"
 
 #define PI 3.1415926535897932384626433832795028841971
 
 #define COUNT 60
 
 namespace mpa {
+
+namespace {
 
 enum { TERM_D, TERM_M, TERM_MPR, TERM_F, TERM_LB, TERM_R, TERM_COUNT };
 
@@ -263,47 +265,6 @@ double apparent_moon_longitude(double lamda_prime, double del_psi) {
   return lamda_prime + del_psi;
 }
 
-double angular_distance_sun_moon(double zen_sun, double azm_sun,
-                                 double zen_moon, double azm_moon) {
-  double zs = deg2rad(zen_sun);
-  double zm = deg2rad(zen_moon);
-
-  return rad2deg(acos(cos(zs) * cos(zm) +
-                      sin(zs) * sin(zm) * cos(deg2rad(azm_sun - azm_moon))));
-}
-
-double sun_disk_radius(double r) { return 959.63 / (3600.0 * r); }
-
-double moon_disk_radius(double e, double pi, double cap_delta) {
-  return 358473400 * (1 + sin(deg2rad(e)) * sin(deg2rad(pi))) /
-         (3600.0 * cap_delta);
-}
-
-void sul_area(double ems, double rs, double rm, double *a_sul,
-              double *a_sul_pct) {
-  double ems2 = ems * ems;
-  double rs2 = rs * rs;
-  double rm2 = rm * rm;
-  double snum, ai, m, s, h;
-
-  if (ems < (rs + rm)) {
-    if (ems <= fabs(rs - rm))
-      ai = PI * rm2;
-    else {
-      snum = ems2 + rs2 - rm2;
-      m = (ems2 - rs2 + rm2) / (2 * ems);
-      s = snum / (2 * ems);
-      h = sqrt(4 * ems2 * rs2 - snum * snum) / (2 * ems);
-      ai = (rs2 * acos(s / rs) - h * s + rm2 * acos(m / rm) - h * m);
-    }
-  } else
-    ai = 0;
-
-  *a_sul = PI * rs2 - ai;
-  if (*a_sul < 0) *a_sul = 0;
-  *a_sul_pct = *a_sul * 100.0 / (PI * rs2);
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////
 // Calculate all MPA parameters and put into structure
 // Note: All inputs values (listed in SPA header file) must already be in
@@ -351,32 +312,16 @@ void mpa_calculate(spa_data *spa, mpa_data *mpa) {
   mpa->azimuth = topocentric_azimuth_angle(mpa->azimuth_astro);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////
-// Calculate all SAMPA parameters and put into structure
-// Note: All inputs values (listed in SPA header file) must already be in
-// structure
-///////////////////////////////////////////////////////////////////////////////////////////
-int sampa_calculate(sampa_data *sampa) {
-  int result;
+}  // namespace
 
-  result = spa_calculate(&sampa->spa);
+int sampa_calculate(sampa_data *sampa) {
+  int result = spa_calculate(&sampa->spa);
 
   if (result == 0) {
     mpa_calculate(&sampa->spa, &sampa->mpa);
-
-    sampa->ems =
-        angular_distance_sun_moon(sampa->spa.zenith, sampa->spa.azimuth,
-                                  sampa->mpa.zenith, sampa->mpa.azimuth);
-    sampa->rs = sun_disk_radius(sampa->spa.r);
-    sampa->rm =
-        moon_disk_radius(sampa->mpa.e, sampa->mpa.pi, sampa->mpa.cap_delta);
-
-    sul_area(sampa->ems, sampa->rs, sampa->rm, &sampa->a_sul,
-             &sampa->a_sul_pct);
   }
 
   return result;
 }
-///////////////////////////////////////////////////////////////////////////////////////////
 
 }  // namespace mpa

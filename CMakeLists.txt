@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.22)
 project(libmpa)
 
-set (CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11)
+
+set(CMAKE_CXX_FLAGS "-Wall -Wunused-function -Werror")
 
 add_library(sampa
   sampa/spa.cc
@@ -13,6 +15,8 @@ add_library(sampa
 )
 
 add_library(mpa
+  mpa/util.cc
+  mpa/util.h
   mpa/spa.cc
   mpa/spa.h
   mpa/sampa.cc
