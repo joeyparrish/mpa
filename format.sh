@@ -2,5 +2,5 @@
 
 set -e
 
-dos2unix "$@"
+dos2unix -q "$@"
 clang-format --style=Google -i "$@"

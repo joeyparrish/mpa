@@ -98,6 +98,8 @@
 
 #define COUNT 60
 
+namespace sampa {
+
 enum { TERM_D, TERM_M, TERM_MPR, TERM_F, TERM_LB, TERM_R, TERM_COUNT };
 
 ///////////////////////////////////////////////////////
@@ -424,3 +426,5 @@ int sampa_calculate(sampa_data *sampa) {
   return result;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
+
+}  // namespace sampa

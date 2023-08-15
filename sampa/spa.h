@@ -49,8 +49,9 @@
 //                                                                    //
 ////////////////////////////////////////////////////////////////////////
 
-#ifndef __solar_position_algorithm_header
-#define __solar_position_algorithm_header
+#pragma once
+
+namespace sampa {
 
 // enumeration for function codes to select desired final outputs from SPA
 enum {
@@ -217,4 +218,4 @@ double topocentric_azimuth_angle(double azimuth_astro);
 // structure
 int spa_calculate(spa_data *spa);
 
-#endif
+}  // namespace sampa

@@ -30,6 +30,8 @@
 
 #include <math.h>
 
+namespace sampa {
+
 void bird_horiz(double dni, double coszen, double ias, double albedo, double rs,
                 double *ghi, double *dhi) {
   double dir_horz = dni * coszen;
@@ -84,3 +86,5 @@ void bird_calculate(bird_data *b) {
     b->direct_normal_mod = b->global_horiz_mod = b->diffuse_horiz_mod = 0;
   }
 }
+
+}  // namespace sampa

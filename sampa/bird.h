@@ -55,8 +55,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef __bird_clear_sky_model_header
-#define __bird_clear_sky_model_header
+#pragma once
+
+namespace sampa {
 
 typedef struct {
   //----------------------------------INPUT
@@ -100,4 +101,4 @@ typedef struct {
 
 void bird_calculate(bird_data *bird);
 
-#endif
+}  // namespace sampa

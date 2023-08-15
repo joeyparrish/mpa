@@ -57,10 +57,11 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef __sun_and_moon_position_algorithm_header
-#define __sun_and_moon_position_algorithm_header
+#pragma once
 
 #include "spa.h"
+
+namespace sampa {
 
 // enumeration for function codes to select desired final outputs from SAMPA
 enum {
@@ -161,4 +162,4 @@ typedef struct {
 // structure
 int sampa_calculate(sampa_data *sampa);
 
-#endif
+}  // namespace sampa

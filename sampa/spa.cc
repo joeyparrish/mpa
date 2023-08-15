@@ -125,7 +125,7 @@
 //         SAMPA. Rename 4 "utility" function names (remove "sun") for clarity
 //         with NREL's SAMPA.
 //		   Added delta_ut1 as required input, which the fractional
-//second difference between UT and UTC.
+// second difference between UT and UTC.
 //         Time must be input w/o delta_ut1 adjustment, instead of assuming
 //         adjustment was pre-applied.
 // Revised 10-JUL-2014 Andreas
@@ -155,13 +155,15 @@
 #define B_MAX_SUBCOUNT 5
 #define R_MAX_SUBCOUNT 40
 
+#define TERM_Y_COUNT TERM_X_COUNT
+
+namespace sampa {
+
 enum { TERM_A, TERM_B, TERM_C, TERM_COUNT };
 enum { TERM_X0, TERM_X1, TERM_X2, TERM_X3, TERM_X4, TERM_X_COUNT };
 enum { TERM_PSI_A, TERM_PSI_B, TERM_EPS_C, TERM_EPS_D, TERM_PE_COUNT };
 enum { JD_MINUS, JD_ZERO, JD_PLUS, JD_COUNT };
 enum { SUN_TRANSIT, SUN_RISE, SUN_SET, SUN_COUNT };
-
-#define TERM_Y_COUNT TERM_X_COUNT
 
 const int l_subcount[L_COUNT] = {64, 34, 20, 7, 3, 1};
 const int b_subcount[B_COUNT] = {5, 2};
@@ -1070,3 +1072,5 @@ int spa_calculate(spa_data *spa) {
   return result;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////
+
+}  // namespace sampa
