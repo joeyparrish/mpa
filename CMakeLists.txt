@@ -4,10 +4,10 @@ project(libmpa)
 set (CMAKE_CXX_STANDARD 11)
 
 add_library(sampa
-  sampa/spa.c
+  sampa/spa.cc
   sampa/spa.h
-  sampa/sampa.c
+  sampa/sampa.cc
   sampa/sampa.h
-  sampa/bird.c
+  sampa/bird.cc
   sampa/bird.h
 )
