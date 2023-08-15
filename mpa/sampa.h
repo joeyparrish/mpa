@@ -32,7 +32,6 @@ namespace mpa {
 
 typedef struct {
   //-----------------Intermediate MPA OUTPUT VALUES--------------------
-
   double l_prime;      // moon mean longitude [degrees]
   double d;            // moon mean elongation [degrees]
   double m;            // sun mean anomaly [degrees]
@@ -53,7 +52,6 @@ typedef struct {
   double h;            // observer hour angle [degrees]
   double del_alpha;    // moon right ascension parallax [degrees]
   double delta_prime;  // topocentric moon declination [degrees]
-  double alpha_prime;  // topocentric moon right ascension [degrees]
   double h_prime;      // topocentric local hour angle [degrees]
 
   double e0;             // topocentric elevation angle (uncorrected) [degrees]
