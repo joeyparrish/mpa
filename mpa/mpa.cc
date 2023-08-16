@@ -1,74 +1,64 @@
-///////////////////////////////////////////////
-// Solar and Moon Position Algorithm (SAMPA) //
-//                   for                     //
-//        Solar Radiation Application        //
-//                                           //
-//              August 1, 2012               //
-//                                           //
-//   Filename: SAMPA.C                       //
-//                                           //
-//   Afshin Michael Andreas                  //
-//   Afshin.Andreas@NREL.gov (303)384-6383   //
-//                                           //
-//   Solar Resource and Forecasting Group    //
-//   Solar Radiation Research Laboratory     //
-//   National Renewable Energy Laboratory    //
-//   15013 Denver W Pkwy, Golden, CO 80401   //
-///////////////////////////////////////////////
-
-///////////////////////////////////////////////
-//  See the SAMPA.H header file for usage    //
-//                                           //
-//  This code is based on the NREL           //
-//  technical report "Solar Eclipse          //
-//  Monitoring for Solar Energy Applications //
-//  using the Solar and Moon Position        //
-//  Algorithms" by Ibrahim Reda              //
-///////////////////////////////////////////////
-
-///////////////////////////////////////////////////////////////////////////////////////////////
-//
-//   NOTICE
-//   Copyright (C) 2012 the Alliance for Sustainable Energy, LLC, All Rights
-//   Reserved
-//
-// This computer software is prepared by the Alliance for Sustainable Energy,
-// LLC, (hereinafter the "Contractor"), under Contract DE-AC36-08GO28308
-// ("Contract") with the Department of Energy ("DOE"). The United States
-// Government has been granted for itself and others acting on its behalf a
-// paid-up, non-exclusive, irrevocable, worldwide license in the Software to
-// reproduce, prepare derivative works, and perform publicly and display
-// publicly. Beginning five (5) years after the date permission to assert
-// copyright is obtained from DOE, and subject to any subsequent five (5) year
-// renewals, the United States Government is granted for itself and others
-// acting on its behalf a paid-up, non-exclusive, irrevocable, worldwide license
-// in the Software to reproduce, prepare derivative works, distribute copies to
-// the public, perform publicly and display publicly, and to permit others to do
-// so. If the Contractor ceases to make this computer software available, it may
-// be obtained from DOE's Office of Scientific and Technical Information's
-// Energy Science and Technology Software Center (ESTSC) at PO Box 1020, Oak
-// Ridge, TN 37831-1020. THIS SOFTWARE IS PROVIDED BY THE CONTRACTOR "AS IS" AND
-// ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING BUT NOT LIMITED TO, THE IMPLIED
-// WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-// DISCLAIMED. IN NO EVENT SHALL THE CONTRACTOR, DOE, OR THE U.S GOVERNMENT BE
-// LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-// WHATSOEVER, INCLUDING BUT NOT LIMITED TO CLAIMS ASSOCIATED WITH THE LOSS OF
-// DATA OR PROFITS, WHICH MAY RESULT FROM AN ACTION IN CONTRACT, NEGLIGENCE OR
-// OTHER TORTIOUS CLAIM THAT ARISES OUT OF OR IN CONNECTION WITH THE ACCESS, USE
-// OR PERFORMANCE OF THIS SOFTWARE.
-//
-// The software is being provided for internal, noncommercial purposes only and
-// shall not be re-distributed. Please contact Jennifer Ramsey
-// (Jennifer.Ramsey@nrel.gov) in the NREL Commercialization and Technology
-// Transfer Office for information concerning a commercial license to use the
-// Software.
-//
-// As a condition of using the software in an application, the developer of the
-// application agrees to reference the use of the software and make this notice
-// readily accessible to any end-user in a Help|About screen or equivalent
-// manner.
-//
-///////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * Moon Position Algorithm (MPA)
+ *
+ * Based on SAMPA (Solar And Moon Position Algorithm) and SPA (Solar Position
+ * Algorithm), downloaded from the US Department of Energy, stripped to the
+ * barest essentials for the moon, and ported to C++.
+ *
+ * SPA and SAMPA were written in 2003 and 2012, respectively, by Afshin Michael
+ * Andreas (Afshin.Andreas@NREL.gov), Measurement & Instrumentation Team, Solar
+ * Radiation Research Laboratory, National Renewable Energy Laboratory (NREL).
+ * They were based on the NREL technical report "Solar Position Algorithm for
+ * Solar Radiation Application" by Ibrahim Reda & Afshin Andreas, and the NREL
+ * technical report "Solar Eclipse Monitoring for Solar Energy Applications
+ * using the Solar and Moon Position Algorithms" by Ibrahim Reda.
+ *
+ * Ported by Joey Parrish <joey.parrish@gmail.com>.
+ *
+ * Original copyright notices:
+ *
+ * Copyright (C) 2008-2012 Alliance for Sustainable Energy, LLC, All Rights
+ * Reserved.
+ *
+ * The Solar Position Algorithm ("Software") is code in development prepared by
+ * employees of the Alliance for Sustainable Energy, LLC, (hereinafter the
+ * "Contractor"), under Contract No. DE-AC36-08GO28308 ("Contract") with the
+ * U.S. Department of Energy (the "DOE"). The United States Government has been
+ * granted for itself and others acting on its behalf a paid-up, non-
+ * exclusive, irrevocable, worldwide license in the Software to reproduce,
+ * prepare derivative works, and perform publicly and display publicly.
+ * Beginning five (5) years after the date permission to assert copyright is
+ * obtained from the DOE, and subject to any subsequent five (5) year renewals,
+ * the United States Government is granted for itself and others acting on its
+ * behalf a paid-up, non-exclusive, irrevocable, worldwide license in the
+ * Software to reproduce, prepare derivative works, distribute copies to the
+ * public, perform publicly and display publicly, and to permit others to do
+ * so. If the Contractor ceases to make this computer software available, it
+ * may be obtained from DOE's Office of Scientific and Technical Information's
+ * Energy Science and Technology Software Center (ESTSC) at P.O. Box 1020, Oak
+ * Ridge, TN 37831-1020.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE CONTRACTOR "AS IS" AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO
+ * EVENT SHALL THE CONTRACTOR OR THE U.S. GOVERNMENT BE LIABLE FOR ANY SPECIAL,
+ * INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER, INCLUDING BUT
+ * NOT LIMITED TO CLAIMS ASSOCIATED WITH THE LOSS OF DATA OR PROFITS, WHICH MAY
+ * RESULT FROM AN ACTION IN CONTRACT, NEGLIGENCE OR OTHER TORTIOUS CLAIM THAT
+ * ARISES OUT OF OR IN CONNECTION WITH THE ACCESS, USE OR PERFORMANCE OF THIS
+ * SOFTWARE.
+ *
+ * The Software is being provided for internal, noncommercial purposes only and
+ * shall not be re-distributed. Please contact Jennifer Ramsey
+ * (Jennifer.Ramsey@nrel.gov) in the NREL Commercialization and Technology
+ * Transfer Office for information concerning a commercial license to use the
+ * Software.
+ *
+ * As a condition of using the Software in an application, the developer of the
+ * application agrees to reference the use of the Software and make this Notice
+ * readily accessible to any end-user in a Help|About screen or equivalent
+ * manner.
+ */
 
 #include "mpa.h"
 
@@ -87,9 +77,7 @@ namespace {
 
 enum { TERM_D, TERM_M, TERM_MPR, TERM_F, TERM_LB, TERM_R, TERM_COUNT };
 
-///////////////////////////////////////////////////////
-///  Moon's Periodic Terms for Longitude and Distance
-///////////////////////////////////////////////////////
+//  Moon's Periodic Terms for Longitude and Distance
 const double ML_TERMS[COUNT][TERM_COUNT] = {{0, 0, 1, 0, 6288774, -20905355},
                                             {2, 0, -1, 0, 1274027, -3699111},
                                             {2, 0, 0, 0, 658314, -2955968},
@@ -150,9 +138,8 @@ const double ML_TERMS[COUNT][TERM_COUNT] = {{0, 0, 1, 0, 6288774, -20905355},
                                             {1, 1, -1, 0, 299, 0},
                                             {2, 0, 3, 0, 294, 0},
                                             {2, 0, -1, -2, 0, 8752}};
-///////////////////////////////////////////////////////
-///  Moon's Periodic Terms for Latitude
-///////////////////////////////////////////////////////
+
+//  Moon's Periodic Terms for Latitude
 const double MB_TERMS[COUNT][TERM_COUNT] = {
     {0, 0, 0, 1, 5128122, 0}, {0, 0, 1, 1, 280602, 0},
     {0, 0, 1, -1, 277693, 0}, {2, 0, 0, -1, 173237, 0},
@@ -184,7 +171,6 @@ const double MB_TERMS[COUNT][TERM_COUNT] = {
     {4, -1, -1, -1, 166, 0},  {1, 0, 1, -1, -164, 0},
     {4, 0, 1, -1, 132, 0},    {1, 0, -1, -1, -119, 0},
     {4, -1, 0, -1, 115, 0},   {2, -2, 0, 1, 107, 0}};
-///////////////////////////////////////////////////////////////////////////////////////////////
 
 double fourth_order_polynomial(double a, double b, double c, double d, double e,
                                double x) {
