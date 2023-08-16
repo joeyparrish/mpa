@@ -60,35 +60,38 @@
 
 cmake_minimum_required(VERSION 3.22)
 project(libmpa)
-
-set(CMAKE_CXX_STANDARD 11)
+include(CTest)
 
 set(CMAKE_CXX_FLAGS "-Wall -Wpedantic -Werror")
-
-add_library(sampa
-  sampa/spa.cc
-  sampa/spa.h
-  sampa/sampa.cc
-  sampa/sampa.h
-  sampa/bird.cc
-  sampa/bird.h
-)
 
 add_library(mpa
   mpa/mpa.cc
   mpa/mpa.h
 )
 
-# Defines the libraries "gtest" and "gtest_main"
-add_subdirectory(googletest)
+if(BUILD_TESTING)
+  # Defines the libraries "gtest" and "gtest_main"
+  add_subdirectory(googletest)
 
-add_executable(regression_test
-  regression_test.cc
-)
+  add_library(sampa
+    sampa/spa.cc
+    sampa/spa.h
+    sampa/sampa.cc
+    sampa/sampa.h
+    sampa/bird.cc
+    sampa/bird.h
+  )
 
-target_link_libraries(regression_test
-  sampa
-  mpa
-  gtest
-  gtest_main
-)
+  add_executable(regression_test
+    regression_test.cc
+  )
+
+  target_link_libraries(regression_test
+    sampa
+    mpa
+    gtest
+    gtest_main
+  )
+
+  add_test(regression_test regression_test)
+endif()
