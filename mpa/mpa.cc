@@ -75,10 +75,11 @@ namespace mpa {
 
 namespace {
 
-enum { TERM_D, TERM_M, TERM_MPR, TERM_F, TERM_LB, TERM_R, TERM_COUNT };
+enum { TERM_D, TERM_M, TERM_MPR, TERM_F, TERM_LB, TERM_R, MPA_TERM_COUNT };
 
 //  Moon's Periodic Terms for Longitude and Distance
-const double ML_TERMS[COUNT][TERM_COUNT] = {{0, 0, 1, 0, 6288774, -20905355},
+const double ML_TERMS[COUNT][MPA_TERM_COUNT] = {
+{0, 0, 1, 0, 6288774, -20905355},
                                             {2, 0, -1, 0, 1274027, -3699111},
                                             {2, 0, 0, 0, 658314, -2955968},
                                             {0, 0, 2, 0, 213618, -569925},
@@ -140,7 +141,7 @@ const double ML_TERMS[COUNT][TERM_COUNT] = {{0, 0, 1, 0, 6288774, -20905355},
                                             {2, 0, -1, -2, 0, 8752}};
 
 //  Moon's Periodic Terms for Latitude
-const double MB_TERMS[COUNT][TERM_COUNT] = {
+const double MB_TERMS[COUNT][MPA_TERM_COUNT] = {
     {0, 0, 0, 1, 5128122, 0}, {0, 0, 1, 1, 280602, 0},
     {0, 0, 1, -1, 277693, 0}, {2, 0, 0, -1, 173237, 0},
     {2, 0, -1, 1, 55413, 0},  {2, 0, -1, -1, 46271, 0},
@@ -208,7 +209,7 @@ double moon_latitude_argument(double jc) {
 
 void moon_periodic_term_summation(double d, double m, double m_prime, double f,
                                   double jc,
-                                  const double terms[COUNT][TERM_COUNT],
+                                  const double terms[COUNT][MPA_TERM_COUNT],
                                   double *sin_sum, double *cos_sum) {
   int i;
   double e_mult, trig_arg;

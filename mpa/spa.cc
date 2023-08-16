@@ -68,14 +68,14 @@
 
 #define Y_COUNT 63
 
-#define TERM_Y_COUNT TERM_X_COUNT
+#define TERM_Y_COUNT SPA_X_TERM_COUNT
 
 namespace mpa {
 
 namespace {
 
-enum { TERM_X0, TERM_X1, TERM_X2, TERM_X3, TERM_X4, TERM_X_COUNT };
-enum { TERM_PSI_A, TERM_PSI_B, TERM_EPS_C, TERM_EPS_D, TERM_PE_COUNT };
+enum { TERM_X0, TERM_X1, TERM_X2, TERM_X3, TERM_X4, SPA_X_TERM_COUNT };
+enum { TERM_PSI_A, TERM_PSI_B, TERM_EPS_C, TERM_EPS_D, SPA_PE_TERM_COUNT };
 
 //  Periodic Terms for the nutation in longitude and obliquity
 const int Y_TERMS[Y_COUNT][TERM_Y_COUNT] = {
@@ -97,7 +97,7 @@ const int Y_TERMS[Y_COUNT][TERM_Y_COUNT] = {
     {2, -1, -1, 2, 2}, {0, 0, 3, 2, 2},   {2, -1, 0, 2, 2},
 };
 
-const double PE_TERMS[Y_COUNT][TERM_PE_COUNT] = {
+const double PE_TERMS[Y_COUNT][SPA_PE_TERM_COUNT] = {
     {-171996, -174.2, 92025, 8.9},
     {-13187, -1.6, 5736, -3.1},
     {-2274, -0.2, 977, -0.5},
@@ -216,7 +216,7 @@ double ascending_longitude_moon(double jc) {
                                 125.04452, jc);
 }
 
-double xy_term_summation(int i, double x[TERM_X_COUNT]) {
+double xy_term_summation(int i, double x[SPA_X_TERM_COUNT]) {
   int j;
   double sum = 0;
 
@@ -225,7 +225,7 @@ double xy_term_summation(int i, double x[TERM_X_COUNT]) {
   return sum;
 }
 
-void nutation_longitude_and_obliquity(double jc, double x[TERM_X_COUNT],
+void nutation_longitude_and_obliquity(double jc, double x[SPA_X_TERM_COUNT],
                                       double *del_psi, double *del_epsilon) {
   int i;
   double xy_term_sum, sum_psi = 0, sum_epsilon = 0;
@@ -281,7 +281,7 @@ void spa_calculate(const mpa_input &input, spa_data *spa) {
   // Julian millenium
   double jm = julian_millennium(spa->jc);
 
-  double x[TERM_X_COUNT];
+  double x[SPA_X_TERM_COUNT];
   x[TERM_X0] = mean_elongation_moon_sun(spa->jc);
   x[TERM_X1] = mean_anomaly_sun(spa->jc);
   x[TERM_X2] = mean_anomaly_moon(spa->jc);
