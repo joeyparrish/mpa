@@ -63,7 +63,7 @@ project(libmpa)
 
 set(CMAKE_CXX_STANDARD 11)
 
-set(CMAKE_CXX_FLAGS "-Wall -Wunused-function -Werror")
+set(CMAKE_CXX_FLAGS "-Wall -Wpedantic -Werror")
 
 add_library(sampa
   sampa/spa.cc
