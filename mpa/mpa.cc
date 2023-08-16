@@ -65,19 +65,107 @@
 #include <cmath>
 #include <cstring>
 
-#include "spa.h"
 #include "util.h"
 
 #define COUNT 60
+#define Y_COUNT 63
 #define SUN_RADIUS 0.26667
 
 namespace mpa {
 
 namespace {
 
+enum { TERM_X0, TERM_X1, TERM_X2, TERM_X3, TERM_X4, SPA_X_TERM_COUNT };
+enum { TERM_PSI_A, TERM_PSI_B, TERM_EPS_C, TERM_EPS_D, SPA_PE_TERM_COUNT };
 enum { TERM_D, TERM_M, TERM_MPR, TERM_F, TERM_LB, TERM_R, MPA_TERM_COUNT };
 
-//  Moon's Periodic Terms for Longitude and Distance
+//  Periodic Terms for the nutation in longitude and obliquity
+const int Y_TERMS[Y_COUNT][SPA_X_TERM_COUNT] = {
+    {0, 0, 0, 0, 1},   {-2, 0, 0, 2, 2},  {0, 0, 0, 2, 2},   {0, 0, 0, 0, 2},
+    {0, 1, 0, 0, 0},   {0, 0, 1, 0, 0},   {-2, 1, 0, 2, 2},  {0, 0, 0, 2, 1},
+    {0, 0, 1, 2, 2},   {-2, -1, 0, 2, 2}, {-2, 0, 1, 0, 0},  {-2, 0, 0, 2, 1},
+    {0, 0, -1, 2, 2},  {2, 0, 0, 0, 0},   {0, 0, 1, 0, 1},   {2, 0, -1, 2, 2},
+    {0, 0, -1, 0, 1},  {0, 0, 1, 2, 1},   {-2, 0, 2, 0, 0},  {0, 0, -2, 2, 1},
+    {2, 0, 0, 2, 2},   {0, 0, 2, 2, 2},   {0, 0, 2, 0, 0},   {-2, 0, 1, 2, 2},
+    {0, 0, 0, 2, 0},   {-2, 0, 0, 2, 0},  {0, 0, -1, 2, 1},  {0, 2, 0, 0, 0},
+    {2, 0, -1, 0, 1},  {-2, 2, 0, 2, 2},  {0, 1, 0, 0, 1},   {-2, 0, 1, 0, 1},
+    {0, -1, 0, 0, 1},  {0, 0, 2, -2, 0},  {2, 0, -1, 2, 1},  {2, 0, 1, 2, 2},
+    {0, 1, 0, 2, 2},   {-2, 1, 1, 0, 0},  {0, -1, 0, 2, 2},  {2, 0, 0, 2, 1},
+    {2, 0, 1, 0, 0},   {-2, 0, 2, 2, 2},  {-2, 0, 1, 2, 1},  {2, 0, -2, 0, 1},
+    {2, 0, 0, 0, 1},   {0, -1, 1, 0, 0},  {-2, -1, 0, 2, 1}, {-2, 0, 0, 0, 1},
+    {0, 0, 2, 2, 1},   {-2, 0, 2, 0, 1},  {-2, 1, 0, 2, 1},  {0, 0, 1, -2, 0},
+    {-1, 0, 1, 0, 0},  {-2, 1, 0, 0, 0},  {1, 0, 0, 0, 0},   {0, 0, 1, 2, 0},
+    {0, 0, -2, 2, 2},  {-1, -1, 1, 0, 0}, {0, 1, 1, 0, 0},   {0, -1, 1, 2, 2},
+    {2, -1, -1, 2, 2}, {0, 0, 3, 2, 2},   {2, -1, 0, 2, 2},
+};
+
+const double PE_TERMS[Y_COUNT][SPA_PE_TERM_COUNT] = {
+    {-171996, -174.2, 92025, 8.9},
+    {-13187, -1.6, 5736, -3.1},
+    {-2274, -0.2, 977, -0.5},
+    {2062, 0.2, -895, 0.5},
+    {1426, -3.4, 54, -0.1},
+    {712, 0.1, -7, 0},
+    {-517, 1.2, 224, -0.6},
+    {-386, -0.4, 200, 0},
+    {-301, 0, 129, -0.1},
+    {217, -0.5, -95, 0.3},
+    {-158, 0, 0, 0},
+    {129, 0.1, -70, 0},
+    {123, 0, -53, 0},
+    {63, 0, 0, 0},
+    {63, 0.1, -33, 0},
+    {-59, 0, 26, 0},
+    {-58, -0.1, 32, 0},
+    {-51, 0, 27, 0},
+    {48, 0, 0, 0},
+    {46, 0, -24, 0},
+    {-38, 0, 16, 0},
+    {-31, 0, 13, 0},
+    {29, 0, 0, 0},
+    {29, 0, -12, 0},
+    {26, 0, 0, 0},
+    {-22, 0, 0, 0},
+    {21, 0, -10, 0},
+    {17, -0.1, 0, 0},
+    {16, 0, -8, 0},
+    {-16, 0.1, 7, 0},
+    {-15, 0, 9, 0},
+    {-13, 0, 7, 0},
+    {-12, 0, 6, 0},
+    {11, 0, 0, 0},
+    {-10, 0, 5, 0},
+    {-8, 0, 3, 0},
+    {7, 0, -3, 0},
+    {-7, 0, 0, 0},
+    {-7, 0, 3, 0},
+    {-7, 0, 3, 0},
+    {6, 0, 0, 0},
+    {6, 0, -3, 0},
+    {6, 0, -3, 0},
+    {-6, 0, 3, 0},
+    {-6, 0, 3, 0},
+    {5, 0, 0, 0},
+    {-5, 0, 3, 0},
+    {-5, 0, 3, 0},
+    {-5, 0, 3, 0},
+    {4, 0, 0, 0},
+    {4, 0, 0, 0},
+    {4, 0, 0, 0},
+    {-4, 0, 0, 0},
+    {-4, 0, 0, 0},
+    {-4, 0, 0, 0},
+    {3, 0, 0, 0},
+    {-3, 0, 0, 0},
+    {-3, 0, 0, 0},
+    {-3, 0, 0, 0},
+    {-3, 0, 0, 0},
+    {-3, 0, 0, 0},
+    {-3, 0, 0, 0},
+    {-3, 0, 0, 0},
+};
+
+// Moon's Periodic Terms for Longitude and Distance
 const double ML_TERMS[COUNT][MPA_TERM_COUNT] = {
     {0, 0, 1, 0, 6288774, -20905355},
     {2, 0, -1, 0, 1274027, -3699111},
@@ -140,7 +228,7 @@ const double ML_TERMS[COUNT][MPA_TERM_COUNT] = {
     {2, 0, 3, 0, 294, 0},
     {2, 0, -1, -2, 0, 8752}};
 
-//  Moon's Periodic Terms for Latitude
+// Moon's Periodic Terms for Latitude
 const double MB_TERMS[COUNT][MPA_TERM_COUNT] = {
     {0, 0, 0, 1, 5128122, 0}, {0, 0, 1, 1, 280602, 0},
     {0, 0, 1, -1, 277693, 0}, {2, 0, 0, -1, 173237, 0},
@@ -173,6 +261,112 @@ const double MB_TERMS[COUNT][MPA_TERM_COUNT] = {
     {4, 0, 1, -1, 132, 0},    {1, 0, -1, -1, -119, 0},
     {4, -1, 0, -1, 115, 0},   {2, -2, 0, 1, 107, 0}};
 
+int integer(double value) { return value; }
+
+double julian_day(int year, int month, int day, int hour, int minute,
+                  double second) {
+  double day_decimal, julian_day, a;
+
+  day_decimal = day + (hour + (minute + second / 60.0) / 60.0) / 24.0;
+
+  if (month < 3) {
+    month += 12;
+    year--;
+  }
+
+  julian_day = integer(365.25 * (year + 4716.0)) +
+               integer(30.6001 * (month + 1)) + day_decimal - 1524.5;
+
+  if (julian_day > 2299160.0) {
+    a = integer(year / 100);
+    julian_day += (2 - a + integer(a / 4));
+  }
+
+  return julian_day;
+}
+
+double julian_century(double jd) { return (jd - 2451545.0) / 36525.0; }
+
+double julian_millennium(double jc) { return (jc / 10.0); }
+
+double mean_elongation_moon_sun(double jc) {
+  return third_order_polynomial(1.0 / 189474.0, -0.0019142, 445267.11148,
+                                297.85036, jc);
+}
+
+double mean_anomaly_sun(double jc) {
+  return third_order_polynomial(-1.0 / 300000.0, -0.0001603, 35999.05034,
+                                357.52772, jc);
+}
+
+double mean_anomaly_moon(double jc) {
+  return third_order_polynomial(1.0 / 56250.0, 0.0086972, 477198.867398,
+                                134.96298, jc);
+}
+
+double argument_latitude_moon(double jc) {
+  return third_order_polynomial(1.0 / 327270.0, -0.0036825, 483202.017538,
+                                93.27191, jc);
+}
+
+double ascending_longitude_moon(double jc) {
+  return third_order_polynomial(1.0 / 450000.0, 0.0020708, -1934.136261,
+                                125.04452, jc);
+}
+
+double xy_term_summation(int i, double x[SPA_X_TERM_COUNT]) {
+  int j;
+  double sum = 0;
+
+  for (j = 0; j < SPA_X_TERM_COUNT; j++) sum += x[j] * Y_TERMS[i][j];
+
+  return sum;
+}
+
+void nutation_longitude_and_obliquity(double jc, double x[SPA_X_TERM_COUNT],
+                                      double *del_psi, double *del_epsilon) {
+  int i;
+  double xy_term_sum, sum_psi = 0, sum_epsilon = 0;
+
+  for (i = 0; i < Y_COUNT; i++) {
+    xy_term_sum = deg2rad(xy_term_summation(i, x));
+    sum_psi += (PE_TERMS[i][TERM_PSI_A] + jc * PE_TERMS[i][TERM_PSI_B]) *
+               sin(xy_term_sum);
+    sum_epsilon += (PE_TERMS[i][TERM_EPS_C] + jc * PE_TERMS[i][TERM_EPS_D]) *
+                   cos(xy_term_sum);
+  }
+
+  *del_psi = sum_psi / 36000000.0;
+  *del_epsilon = sum_epsilon / 36000000.0;
+}
+
+double ecliptic_mean_obliquity(double jm) {
+  double u = jm / 10.0;
+
+  return 84381.448 +
+         u * (-4680.93 +
+              u * (-1.55 +
+                   u * (1999.25 +
+                        u * (-51.38 +
+                             u * (-249.67 +
+                                  u * (-39.05 +
+                                       u * (7.12 +
+                                            u * (27.87 +
+                                                 u * (5.79 + u * 2.45)))))))));
+}
+
+double ecliptic_true_obliquity(double delta_epsilon, double epsilon0) {
+  return delta_epsilon + epsilon0 / 3600.0;
+}
+
+double greenwich_mean_sidereal_time(double jd, double jc) {
+  return limit_degrees(280.46061837 + 360.98564736629 * (jd - 2451545.0) +
+                       jc * jc * (0.000387933 - jc / 38710000.0));
+}
+
+double greenwich_sidereal_time(double nu0, double delta_psi, double epsilon) {
+  return nu0 + delta_psi * cos(deg2rad(epsilon));
+}
 double fourth_order_polynomial(double a, double b, double c, double d, double e,
                                double x) {
   return (((a * x + b) * x + c) * x + d) * x + e;
@@ -346,31 +540,58 @@ double topocentric_azimuth_angle(double azimuth_astro) {
 }  // namespace
 
 void compute_mpa(const mpa_input &input, mpa_output *output) {
-  spa_data spa;
-  memset(&spa, 0, sizeof(spa));
-  spa_calculate(input, &spa);
+  // Julian day
+  double jd = julian_day(input.year, input.month, input.day, input.hour,
+                         input.minute, input.second);
+  // Julian century
+  double jc = julian_century(jd);
+  // Julian millenium
+  double jm = julian_millennium(jc);
+
+  double x[SPA_X_TERM_COUNT];
+  x[TERM_X0] = mean_elongation_moon_sun(jc);
+  x[TERM_X1] = mean_anomaly_sun(jc);
+  x[TERM_X2] = mean_anomaly_moon(jc);
+  x[TERM_X3] = argument_latitude_moon(jc);
+  x[TERM_X4] = ascending_longitude_moon(jc);
+
+  // nutation longitude [degrees]
+  double del_psi;
+  // nutation obliquity [degrees]
+  double del_epsilon;
+  nutation_longitude_and_obliquity(jc, x, &del_psi, &del_epsilon);
+
+  // ecliptic mean obliquity [arc seconds]
+  double epsilon0 = ecliptic_mean_obliquity(jm);
+  double epsilon = ecliptic_true_obliquity(del_epsilon, epsilon0);
+
+  // Greenwich mean sidereal time [degrees]
+  double nu0 = greenwich_mean_sidereal_time(jd, jc);
+  // Greenwich sidereal time [degrees]
+  double nu = greenwich_sidereal_time(nu0, del_psi, epsilon);
+  // FIXME: check
 
   // moon mean longitude [degrees]
-  double l_prime = moon_mean_longitude(spa.jc);
+  double l_prime = moon_mean_longitude(jc);
   // moon mean elongation [degrees]
-  double d = moon_mean_elongation(spa.jc);
+  double d = moon_mean_elongation(jc);
   // sun mean anomaly [degrees]
-  double m = sun_mean_anomaly(spa.jc);
+  double m = sun_mean_anomaly(jc);
   // moon mean anomaly [degrees]
-  double m_prime = moon_mean_anomaly(spa.jc);
+  double m_prime = moon_mean_anomaly(jc);
   // moon argument of latitude [degrees]
-  double f = moon_latitude_argument(spa.jc);
+  double f = moon_latitude_argument(jc);
 
   double l, r;
-  moon_periodic_term_summation(d, m, m_prime, f, spa.jc, ML_TERMS, &l, &r);
+  moon_periodic_term_summation(d, m, m_prime, f, jc, ML_TERMS, &l, &r);
   double b;
-  moon_periodic_term_summation(d, m, m_prime, f, spa.jc, MB_TERMS, &b, NULL);
+  moon_periodic_term_summation(d, m, m_prime, f, jc, MB_TERMS, &b, NULL);
 
   // moon longitude [degrees]
   double lamda_prime;
   // moon latitude [degrees]
   double beta;
-  moon_longitude_and_latitude(spa.jc, l_prime, f, m_prime, l, b, &lamda_prime,
+  moon_longitude_and_latitude(jc, l_prime, f, m_prime, l, b, &lamda_prime,
                               &beta);
 
   // distance from earth to moon [kilometers]
@@ -379,15 +600,15 @@ void compute_mpa(const mpa_input &input, mpa_output *output) {
   double pi = moon_equatorial_horiz_parallax(cap_delta);
 
   // apparent moon longitude [degrees]
-  double lamda = apparent_moon_longitude(lamda_prime, spa.del_psi);
+  double lamda = apparent_moon_longitude(lamda_prime, del_psi);
 
   // geocentric moon right ascension [degrees]
-  double alpha = geocentric_right_ascension(lamda, spa.epsilon, beta);
+  double alpha = geocentric_right_ascension(lamda, epsilon, beta);
   // geocentric moon declination [degrees]
-  double delta = geocentric_declination(beta, spa.epsilon, lamda);
+  double delta = geocentric_declination(beta, epsilon, lamda);
 
   // observer hour angle [degrees]
-  double h = observer_hour_angle(spa.nu, input.longitude, alpha);
+  double h = observer_hour_angle(nu, input.longitude, alpha);
 
   // moon right ascension parallax [degrees]
   double del_alpha;
