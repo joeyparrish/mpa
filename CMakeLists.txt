@@ -19,8 +19,8 @@ add_library(mpa
   mpa/util.h
   mpa/spa.cc
   mpa/spa.h
-  mpa/sampa.cc
-  mpa/sampa.h
+  mpa/mpa.cc
+  mpa/mpa.h
 )
 
 # Defines the libraries "gtest" and "gtest_main"
