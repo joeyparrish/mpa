@@ -62,6 +62,8 @@
 
 #pragma once
 
+#include <ctime>
+
 namespace mpa {
 
 struct mpa_input {
@@ -93,6 +95,8 @@ struct mpa_output {
   double azimuth;  // topocentric azimuth angle (degrees east of true north)
 };
 
+void set_mpa_time(const time_t time, mpa_input* input);
+void set_mpa_time(const struct tm& tm, mpa_input* input);
 void compute_mpa(const mpa_input& input, mpa_output* output);
 
 }  // namespace mpa

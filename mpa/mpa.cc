@@ -555,6 +555,21 @@ double topocentric_azimuth_angle(double azimuth_astro) {
 
 }  // namespace
 
+void set_mpa_time(const time_t time, mpa_input* input) {
+  struct tm tm;
+  gmtime_r(&time, &tm);
+  set_mpa_time(tm, input);
+}
+
+void set_mpa_time(const struct tm& tm, mpa_input* input) {
+  input->year = 1900 + tm.tm_year;
+  input->month = tm.tm_mon + 1;
+  input->day = tm.tm_mday;
+  input->hour = tm.tm_hour;
+  input->minute = tm.tm_min;
+  input->second = tm.tm_sec;
+}
+
 void compute_mpa(const mpa_input &input, mpa_output *output) {
   // Julian day
   double jd = julian_day(input.year, input.month, input.day, input.hour,

@@ -60,14 +60,7 @@ void compare_algorithms(time_t now, double latitude, double longitude, double el
   old_data.spa.elevation = elevation;
 
   // Fill in the data to drive the new algorithm.
-  new_input.year = 1900 + utc.tm_year;
-  new_input.month = utc.tm_mon + 1;
-  new_input.day = utc.tm_mday;
-
-  new_input.hour = utc.tm_hour;
-  new_input.minute = utc.tm_min;
-  new_input.second = utc.tm_sec;
-
+  set_mpa_time(utc, &new_input);
   new_input.latitude = latitude;
   new_input.longitude = longitude;
   new_input.elevation = elevation;
