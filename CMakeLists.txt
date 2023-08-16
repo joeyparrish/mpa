@@ -75,8 +75,6 @@ add_library(sampa
 )
 
 add_library(mpa
-  mpa/util.cc
-  mpa/util.h
   mpa/mpa.cc
   mpa/mpa.h
 )
