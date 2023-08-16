@@ -344,7 +344,7 @@ double topocentric_azimuth_angle(double azimuth_astro) {
 
 }  // namespace
 
-void compute_mpa(const mpa_input& input, mpa_output* output) {
+void compute_mpa(const mpa_input &input, mpa_output *output) {
   spa_data spa;
   memset(&spa, 0, sizeof(spa));
   spa_calculate(input, &spa);
@@ -361,18 +361,16 @@ void compute_mpa(const mpa_input& input, mpa_output* output) {
   double f = moon_latitude_argument(spa.jc);
 
   double l, r;
-  moon_periodic_term_summation(d, m, m_prime, f, spa.jc,
-                               ML_TERMS, &l, &r);
+  moon_periodic_term_summation(d, m, m_prime, f, spa.jc, ML_TERMS, &l, &r);
   double b;
-  moon_periodic_term_summation(d, m, m_prime, f, spa.jc,
-                               MB_TERMS, &b, NULL);
+  moon_periodic_term_summation(d, m, m_prime, f, spa.jc, MB_TERMS, &b, NULL);
 
   // moon longitude [degrees]
   double lamda_prime;
   // moon latitude [degrees]
   double beta;
-  moon_longitude_and_latitude(spa.jc, l_prime, f, m_prime,
-                              l, b, &lamda_prime, &beta);
+  moon_longitude_and_latitude(spa.jc, l_prime, f, m_prime, l, b, &lamda_prime,
+                              &beta);
 
   // distance from earth to moon [kilometers]
   double cap_delta = moon_earth_distance(r);
@@ -395,14 +393,12 @@ void compute_mpa(const mpa_input& input, mpa_output* output) {
   // topocentric moon declination [degrees]
   double delta_prime;
   right_ascension_parallax_and_topocentric_dec(
-      input.latitude, input.elevation, pi, h, delta,
-      &del_alpha, &delta_prime);
+      input.latitude, input.elevation, pi, h, delta, &del_alpha, &delta_prime);
   // topocentric local hour angle [degrees]
   double h_prime = topocentric_local_hour_angle(h, del_alpha);
 
   // topocentric elevation angle (uncorrected) [degrees]
-  double e0 = topocentric_elevation_angle(input.latitude, delta_prime,
-                                        h_prime);
+  double e0 = topocentric_elevation_angle(input.latitude, delta_prime, h_prime);
   // atmospheric refraction correction [degrees]
   double del_e = atmospheric_refraction_correction(
       input.pressure, input.temperature, input.atmos_refract, e0);
@@ -411,8 +407,8 @@ void compute_mpa(const mpa_input& input, mpa_output* output) {
 
   output->zenith = topocentric_zenith_angle(e);
   // topocentric azimuth angle (westward from south) [for astronomers]
-  double azimuth_astro = topocentric_azimuth_angle_astro(
-      h_prime, input.latitude, delta_prime);
+  double azimuth_astro =
+      topocentric_azimuth_angle_astro(h_prime, input.latitude, delta_prime);
   output->azimuth = topocentric_azimuth_angle(azimuth_astro);
 }
 

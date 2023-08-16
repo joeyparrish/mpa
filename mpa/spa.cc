@@ -272,7 +272,7 @@ double greenwich_sidereal_time(double nu0, double delta_psi, double epsilon) {
 
 }  // namespace
 
-void spa_calculate(const mpa_input& input, spa_data *spa) {
+void spa_calculate(const mpa_input &input, spa_data *spa) {
   // Julian day
   double jd = julian_day(input.year, input.month, input.day, input.hour,
                          input.minute, input.second);
@@ -290,8 +290,7 @@ void spa_calculate(const mpa_input& input, spa_data *spa) {
 
   // nutation obliquity [degrees]
   double del_epsilon;
-  nutation_longitude_and_obliquity(spa->jc, x, &spa->del_psi,
-                                   &del_epsilon);
+  nutation_longitude_and_obliquity(spa->jc, x, &spa->del_psi, &del_epsilon);
 
   // ecliptic mean obliquity [arc seconds]
   double epsilon0 = ecliptic_mean_obliquity(jm);

@@ -68,14 +68,14 @@ namespace mpa {
 
 typedef struct {
   // Values reused by mpa
-  double jc;  // Julian century
-  double del_psi;      // nutation longitude [degrees]
-  double epsilon;      // ecliptic true obliquity  [degrees]
+  double jc;       // Julian century
+  double del_psi;  // nutation longitude [degrees]
+  double epsilon;  // ecliptic true obliquity  [degrees]
   double nu;       // Greenwich sidereal time [degrees]
 } spa_data;
 
 // Calculate SPA output values (in structure) based on input values passed in
 // structure
-void spa_calculate(const mpa_input& input, spa_data *spa);
+void spa_calculate(const mpa_input& input, spa_data* spa);
 
 }  // namespace mpa
