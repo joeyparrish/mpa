@@ -63,7 +63,6 @@
 #include "mpa.h"
 
 #include <cmath>
-#include <cstring>
 
 #define COUNT 60
 #define Y_COUNT 63
@@ -586,7 +585,6 @@ void compute_mpa(const mpa_input &input, mpa_output *output) {
   double nu0 = greenwich_mean_sidereal_time(jd, jc);
   // Greenwich sidereal time [degrees]
   double nu = greenwich_sidereal_time(nu0, del_psi, epsilon);
-  // FIXME: check
 
   // moon mean longitude [degrees]
   double l_prime = moon_mean_longitude(jc);
