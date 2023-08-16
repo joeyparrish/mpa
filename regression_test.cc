@@ -1,3 +1,12 @@
+/**
+ * Moon Position Algorithm (MPA) Regression Tests
+ *
+ * Copyright 2023 Joey Parrish <joey.parrish@gmail.com>
+ *
+ * Ensures that this ported, stripped-down version of MPA is compatible with
+ * the original SAMPA implementation from the DoE and NREL.
+ */
+
 #include <cinttypes>
 #include <cmath>
 #include <cstdlib>
