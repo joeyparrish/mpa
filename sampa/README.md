@@ -15,4 +15,4 @@ following ways:
    both are linked into the regression test executable
  - Automated formatting applied for readability
 
-**TODO**: Add a link to the original download location from the DoE
+See also https://midcdmz.nrel.gov/sampa/
